@@ -64,7 +64,6 @@ async function onApplyUsername() {
 
 	let badges_html = []
 	const badges = await generateBadges()
-	console.log(badges)
 	for(const badge in badges) {
 		if(!badges[badge]) continue
 		const bdata = badges[badge]
@@ -109,6 +108,72 @@ async function generateBadges() {
 
 	// -- BADGE 3 - 13 : Criteria contributor
 
+	appendCriteriaBadges(unlockedBadges)
+
+
+	// -- BADGE 14 : First
+	// -- BADGE 15 : Early contributors
+
+	appendFirstAndEarlyBadges(unlockedBadges)
+
+	return unlockedBadges
+}
+
+function getBadge(title, selectedUser, fc, info) {
+	// Get the grade and progression of the numerical badge that value is given by fc function
+
+	const scores = {}
+	let progress = fc(selectedUser)
+	scores[selectedUser] = progress
+
+	if(progress <= 0)
+		return null
+
+	// Compute every other users score for this badge using fc
+	for(const user in dataset.individualScores) {
+		if(user != selectedUser) {
+			const usc = fc(user)
+			if(usc && usc >= 1)
+				scores[user] = usc
+		}
+	}
+
+	// Sort users by score
+	const sortedUsers = Object.keys(scores).sort((a,b) => scores[b] - scores[a])
+
+	// Compute grades steps
+	const steps = {
+		best: scores[sortedUsers[0]], // FIRST user
+		gold: scores[sortedUsers[10]], // Within top 10
+		silver: scores[sortedUsers[(sortedUsers.length/10)|0]], // Within top 10%
+		bronze: scores[sortedUsers[(sortedUsers.length/3)|0]], // Within top 33%
+	}
+
+	// Select corresponding step
+	let grade = 'default'
+	let currGrade = 1
+	let nextGrade = steps.bronze
+	if(progress >= steps.best) {
+		grade = 'best'
+		currGrade = steps.best
+		nextGrade = null
+	} else if(progress >= steps.gold) {
+		grade = 'gold'
+		currGrade = steps.gold
+		nextGrade = steps.best
+	} else if(progress >= steps.silver) {
+		grade = 'silver'
+		currGrade = steps.silver
+		nextGrade = steps.gold
+	} else if(progress >= steps.bronze) {
+		grade = 'bronze'
+		currGrade = steps.bronze
+		nextGrade = steps.silver
+	}
+	return {title, grade, currGrade, nextGrade, progress, info}
+}
+
+function appendCriteriaBadges(unlockedBadges) {
 	// for each criterion (individualScores = {<user>: {<vid>: {<criterion>: {score: <float>, uncertainty: <float>, voting_right: <float>}}}})
 	const criteriaText = {
 		'importance': 'Importance',
@@ -152,61 +217,66 @@ async function generateBadges() {
 			'comparisons with criteria ' + criteriaText[criterion]
 		)
 	}
-
-	return unlockedBadges
 }
-
-function getBadge(title, selectedUser, fc, info) {
-	// Get the grade and progression of the numerical badge that value is given by fc function
-
-	const scores = {}
-	let progress = fc(selectedUser)
-	scores[selectedUser] = progress
-
-	if(progress <= 0)
-		return null
-
-	// Compute every other users score for this badge using fc
-	for(const user in dataset.individualScores) {
-		if(user != selectedUser) {
-			const usc = fc(user)
-			if(usc && usc >= 1)
-				scores[user] = usc
+function appendFirstAndEarlyBadges(unlockedBadges) {
+	// For every video, find who are their first contributors (users having done a comparison on it with week being the minimum)
+	const vidFirstContrib = {} // video: {week:{users}}
+	for(const user in dataset.comparisons) {
+		for(const week in dataset.comparisons[user]['largely_recommended']) {
+			for(const cmp of dataset.comparisons[user]['largely_recommended'][week]) {
+				for(const vid of [cmp.pos, cmp.neg]) {
+					if(!vidFirstContrib[vid]) {
+						vidFirstContrib[vid] = {}
+					}
+					if(!vidFirstContrib[vid][week]) {
+						vidFirstContrib[vid][week] = {}
+					}
+					vidFirstContrib[vid][week][user] = true
+				}
+			}
 		}
 	}
 
-	// Sort users by score
-	const sortedUsers = Object.keys(scores).sort((a,b) => scores[b] - scores[a])
+	const usersFirstContribs = {} // user: {first:[vid], early:[vid]}
+	for(const vid in vidFirstContrib) {
+		const weeks = Object.keys(vidFirstContrib[vid])
+		weeks.sort()
 
-	// Compute grades steps
-	const steps = {
-		best: scores[sortedUsers[0]],
-		gold: scores[sortedUsers[10]],
-		silver: scores[sortedUsers[(sortedUsers.length*.10)|0]],
-		bronze: scores[sortedUsers[(sortedUsers.length*.333)|0]],
-	}
-	console.log(title, steps)
+		let earlyUsers = Object.keys(vidFirstContrib[vid][weeks.shift()])
+		if(earlyUsers.length === 1) {
+			if(!usersFirstContribs[earlyUsers[0]])
+				usersFirstContribs[earlyUsers[0]] = {first:[], early:[]}
+			usersFirstContribs[earlyUsers[0]].first.push(vid)
 
-	// Select corresponding step
-	let grade = 'default'
-	let currGrade = 1
-	let nextGrade = steps.bronze
-	if(progress >= steps.best) {
-		grade = 'best'
-		currGrade = steps.best
-		nextGrade = null
-	} else if(progress >= steps.gold) {
-		grade = 'gold'
-		currGrade = steps.gold
-		nextGrade = steps.best
-	} else if(progress >= steps.silver) {
-		grade = 'silver'
-		currGrade = steps.silver
-		nextGrade = steps.gold
-	} else if(progress >= steps.bronze) {
-		grade = 'bronze'
-		currGrade = steps.bronze
-		nextGrade = steps.silver
+			earlyUsers.length = 0 // Do not count this user in early users
+		}
+		while(earlyUsers.length < 3 && weeks.length) {
+			const week = weeks.shift()
+			for(const earlyUser in vidFirstContrib[vid][week]) {
+				earlyUsers.push(earlyUser)
+			}
+		}
+		for(const user of earlyUsers) {
+			if(!usersFirstContribs[user])
+				usersFirstContribs[user] = {first: [], early: []}
+			usersFirstContribs[user].early.push(vid)
+		}
 	}
-	return {title, grade, currGrade, nextGrade, progress, info}
+	const noFirst = {first:[], early:[]}
+
+	// First contributor badge for how many time the user is alone in vidos of vidFirstContrib
+	unlockedBadges['First'] = getBadge(
+		'First Contributor',
+		currentSelectedUsername,
+		(user) => (usersFirstContribs[user] || noFirst).first.length,
+		'first comparisons on video'
+	)
+
+	// Early contributor badge for how many time the user is not alone in vidFirstContrib
+	unlockedBadges['EarlyContributor'] = getBadge(
+		'Early Contributor',
+		currentSelectedUsername,
+		(user) => (usersFirstContribs[user] || noFirst).early.length,
+		'early comparisons'
+	)
 }
