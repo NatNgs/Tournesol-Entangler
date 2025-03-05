@@ -1,7 +1,4 @@
 :root {
-	--header-height: 3em;
-	--footer-height: 2em;
-	--color-background-main: #D8D8D8;
 	--color-background-graph: white;
 	--color-background-header: rgb(255, 200, 0);
 	--color-text-header: rgba(0, 0, 0, 0.87);
@@ -9,48 +6,7 @@
 	--color-text-warn: white;
 }
 
-body {
-	background: var(--color-background-main);
-	font-family: "Gill Sans", system-ui, sans-serif;
-}
-
-#header {
-	position: fixed;
-	height: var(--header-height);
-	width: 100%;
-	top:0;
-	left:0;
-	background-color: var(--color-background-header);
-	color: var(--color-text-header);
-	box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 4px -1px, rgba(0, 0, 0, 0.14) 0px 4px 5px 0px, rgba(0, 0, 0, 0.12) 0px 1px 10px 0px;
-
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-}
-
-.hf {
-	margin: .5em;
-	display: flex;
-	flex-wrap: nowrap;
-	justify-content: space-around;
-	align-items: baseline;
-	width: 100%;
-}
-
-h1 {
-	font-family: "Gill Sans", system-ui, sans-serif;
-	font-size: 1.5em;
-	font-weight: 700;
-}
-#footer a {
-	color: white;
-}
-
-#content {
-	margin-top: var(--header-height);
-	margin-bottom: var(--footer-height);
-	padding: 1em .25em;
+#contentBody {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 1em;
@@ -76,26 +32,15 @@ h1 {
 	cursor: grabbing;
 }
 
-div.tooltip {
-	position: absolute;
-	text-align: center;
-	padding: .1rem;
-	background: #FFF;
-	color: #333;
-	border: 1px solid #333;
-	border-radius: 2px;
-	pointer-events: none;
-}
-
 
 @media (max-width: 90vh) {
+	#contentBody {
+		flex-direction: column;
+	}
 	.graphBlock {
 		flex: 1;
 		height: unset;
 		width: 100%;
-	}
-	#content {
-		flex-direction: column;
 	}
 }
 
@@ -135,14 +80,4 @@ div.tooltip {
 @keyframes AnimatedBackgroundPosition {
 	0%{background-position-x:0%}
 	100%{background-position-x:100%}
-}
-
-#footer {
-	position: fixed;
-	height: var(--footer-height);
-	width: 100%;
-	bottom: 0;
-	left: 0;
-	background-color: var(--color-background-warn);
-	color: var(--color-text-warn);
 }
