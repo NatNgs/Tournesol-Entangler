@@ -58,26 +58,3 @@
 	min-height: 100%;
 	flex: 1;
 }
-
-.status {
-	background: #727272;
-	color: var(--color-text-warn);
-	padding: .25em;
-	border-radius: .25em;
-}
-.status.error {
-	background: #B24211;
-}
-.status.success {
-	background: #60A108;
-}
-.status.working {
-	background: linear-gradient(-45deg, #1282B2, #1282B2, #4211B2, #1282B2, #1282B2);
-	background-size: 25%;
-	background-position-x: 0;
-	animation: AnimatedBackgroundPosition 5s linear infinite;
-}
-@keyframes AnimatedBackgroundPosition {
-	0%{background-position-x:0%}
-	100%{background-position-x:100%}
-}

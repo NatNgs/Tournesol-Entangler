@@ -57,9 +57,6 @@ h1 {
 	margin-top: var(--header-height);
 	margin-bottom: var(--footer-height);
 	padding: 1em .25em;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 1em;
 }
 
 div.tooltip {
@@ -81,4 +78,43 @@ div.tooltip {
 	left: 0;
 	background-color: var(--color-background-warn);
 	color: var(--color-text-warn);
+}
+
+.tabs > a {
+	display: inline-block;
+	background-color: #DD9900;
+	padding: .5em;
+	border-radius: .2em;
+	user-select: none;
+	text-decoration: none;
+	color: black;
+}
+.tabs > a:not(.disabled):hover {
+	box-shadow: 0px 0px 5px 2px #0006;
+}
+.tabs > a.disabled {
+	opacity: 50%;
+}
+
+.status {
+	background: #727272;
+	color: var(--color-text-warn);
+	padding: .25em;
+	border-radius: .25em;
+}
+.status.error {
+	background: #B24211;
+}
+.status.success {
+	background: #60A108;
+}
+.status.working {
+	background: linear-gradient(-45deg, #1282B2, #1282B2, #4211B2, #1282B2, #1282B2);
+	background-size: 25%;
+	background-position-x: 0;
+	animation: AnimatedBackgroundPosition 5s linear infinite;
+}
+@keyframes AnimatedBackgroundPosition {
+	0%{background-position-x:0%}
+	100%{background-position-x:100%}
 }
