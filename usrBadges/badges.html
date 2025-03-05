@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>Tournesol Entangler</title>
@@ -28,7 +29,7 @@
 			<div id="contentBody">
 				<div class="actions">
 					1. Download tournesol public dataset: <a href="https://tournesol.app/" target="_blank" rel="noopener noreferrer">tournesol.app</a> (see footer)<br/>
-					2. Import dataset zip file: <input type="file" id="datasetzip" accept=".zip" value="" onchange="onSetDatasetZip()"/><br/>
+					2. Import dataset zip file: <input type="file" id="datasetzip" accept=".zip" name="tournesolDataset" value="" onchange="onSetDatasetZip()"/><br/>
 					3. Select a user: <input type="text" id="username" placeholder="username"/><button id="userapply" onclick="onApplyUsername()">Apply</button><br/>
 				</div>
 				<br/>
@@ -37,6 +38,8 @@
 					<h1>Statistics</h1>
 					<div>Public videos: <span id="stt_nb_videos">?</span></div>
 					<div>Public comparisons: <span id="stt_comparisons">?</span></div>
+				</div>
+				<div id="badgesContainer">
 				</div>
 			</div>
 		</div> <!-- ===================== -->

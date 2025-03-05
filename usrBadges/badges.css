@@ -1,0 +1,70 @@
+
+.badge {
+	display: block;
+	margin: .25em;
+	padding: .5em;
+	border-radius: .5em;
+	border: .25em ridge gray;
+	background-repeat: no-repeat;
+	background-position-x: -100%;
+	background-size: 25%;
+	animation: AnimatedShine 8s linear infinite;
+}
+
+.badge.default {
+	background-color: #80A0A0;
+	animation: none;
+}
+.badge.bronze {
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 20%, #0001 50%, transparent 80%,transparent 100%);
+	background-color: #CD7F32;
+	animation-duration: calc(8s - var(--pgs));
+}
+.badge.silver {
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 20%, #FFF2 50%, transparent 80%,transparent 100%);
+	background-color: silver;
+	animation-duration: calc(5s - var(--pgs));
+}
+.badge.gold {
+	border-color: goldenrod;
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 25%, #FFF3 50%, transparent 75%,transparent 100%);
+	background-color: gold;
+	animation-duration: calc(3s - var(--pgs));
+}
+.badge.best {
+	border-color: white;
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 25%, #FFF3 50%, transparent 75%,transparent 100%);
+	background-color: #C0D8F2;
+	animation-duration: 2s;
+}
+
+/* Progress */
+
+.badge .progress {
+	position: relative;
+	width: 100%;
+	height: 1.5em;
+	font-size: 66.67%;
+	margin: .1em -.5em -.5em -.5em;
+	text-align: center;
+}
+.badge .progress:not(.maxed) {
+	background-image: linear-gradient(90deg, #CD7F32 var(--progress), #0000 var(--progress));
+	border: 1px solid #8888;
+	border-radius: .25em;
+	background-color: #fff4;
+}
+.badge.bronze .progress {
+	background-image: linear-gradient(90deg, silver var(--progress), #0000 var(--progress));
+}
+.badge.silver .progress {
+	background-image: linear-gradient(90deg, gold var(--progress), #0000 var(--progress));
+}
+.badge.gold .progress {
+	background-image: linear-gradient(90deg, #C0D8F2 var(--progress), #0000 var(--progress));
+}
+
+@keyframes AnimatedShine {
+	0%{background-position-x:-100%}
+	100%{background-position-x:200%}
+}
