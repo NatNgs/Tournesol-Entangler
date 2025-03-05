@@ -1,31 +1,30 @@
 function DatasetManager() {
-	const THIS = this
+	const DSM = this
 	this.zip = null
 
 	this.individualScores = {} // {<user>: {<vid>: {<criterion>: {score: <float>, uncertainty: <float>, voting_right: <float>}}}}
 	this.collectiveScores = {} // {<vid>: {<criterion>: {score: <float>, uncertainty: <float>}}}
 	this.comparisons = {} // {<user>: {<criterion>: {<week>: [{pos: <vid>, neg: <vid>, score: <float>, score_max: <float>}]}}}
 
-	this.setZip = (file, onUpdate) => {
-		var zip = new JSZip()
+	this.setZip = async function(file, onUpdate) {
 		onUpdate('Extracting Dataset...')
-		return zip.loadAsync(file)
-			.then((content) => THIS.zip = content)
+		return new JSZip().loadAsync(file)
+			.then((content) => DSM.zip = content)
 			.then(() => onUpdate('Loading collective scores...'))
-			.then(THIS.loadCollectiveScores)
+			.then(DSM.loadCollectiveScores)
 			.then(() => onUpdate('Loading individual scores...'))
-			.then(THIS.loadIndividualScores)
+			.then(DSM.loadIndividualScores)
 			.then(() => onUpdate('Loading comparisons...'))
-			.then(THIS.loadComparisons)
+			.then(DSM.loadComparisons)
 	}
 
 	this.loadCollectiveScores = () => new Promise((resolve, reject) => {
 		const REQ_COLS = ['video', 'criteria', 'score'/*, 'uncertainty'*/]
 		const ta = new Date()
-		if(!THIS.zip || !THIS.zip.files || !('collective_criteria_scores.csv' in THIS.zip.files)) {
+		if(!DSM.zip || !DSM.zip.files || !('collective_criteria_scores.csv' in DSM.zip.files)) {
 			return reject('No collective_criteria_scores.csv file found in Zip')
 		}
-		THIS.zip.file('collective_criteria_scores.csv').async('string').then(csvText => {
+		DSM.zip.file('collective_criteria_scores.csv').async('string').then(csvText => {
 			// Séparer les lignes par le retour à la ligne
 			const rows = csvText.trim().split('\n')
 
@@ -48,13 +47,13 @@ function DatasetManager() {
 				}
 				return obj
 			}).forEach((obj) => {
-				if(!(obj.video in THIS.collectiveScores)) {
-					THIS.collectiveScores[obj.video] = {}
+				if(!(obj.video in DSM.collectiveScores)) {
+					DSM.collectiveScores[obj.video] = {}
 				}
-				if(!(obj.criteria in THIS.collectiveScores[obj.video])) {
-					THIS.collectiveScores[obj.video][obj.criteria] = {}
+				if(!(obj.criteria in DSM.collectiveScores[obj.video])) {
+					DSM.collectiveScores[obj.video][obj.criteria] = {}
 				}
-				THIS.collectiveScores[obj.video][obj.criteria] = {
+				DSM.collectiveScores[obj.video][obj.criteria] = {
 					score: parseFloat(obj.score),
 					//uncertainty: parseFloat(obj.uncertainty),
 				}
@@ -68,7 +67,7 @@ function DatasetManager() {
 	this.loadIndividualScores = () => new Promise((resolve, reject) => {
 		const REQ_COLS = ['public_username', 'video', 'criteria', 'score'/*, 'uncertainty', 'voting_right'*/]
 		const ta = new Date()
-		THIS.zip.file('individual_criteria_scores.csv').async('string').then(csvText => {
+		DSM.zip.file('individual_criteria_scores.csv').async('string').then(csvText => {
 			// Séparer les lignes par le retour à la ligne
 			const rows = csvText.trim().split('\n')
 
@@ -91,13 +90,13 @@ function DatasetManager() {
 				}
 				return obj
 			}).forEach((obj) => {
-				if(!(obj.public_username in THIS.individualScores)) {
-					THIS.individualScores[obj.public_username] = {}
+				if(!(obj.public_username in DSM.individualScores)) {
+					DSM.individualScores[obj.public_username] = {}
 				}
-				if(!(obj.video in THIS.individualScores[obj.public_username])) {
-					THIS.individualScores[obj.public_username][obj.video] = {}
+				if(!(obj.video in DSM.individualScores[obj.public_username])) {
+					DSM.individualScores[obj.public_username][obj.video] = {}
 				}
-				THIS.individualScores[obj.public_username][obj.video][obj.criteria] = {
+				DSM.individualScores[obj.public_username][obj.video][obj.criteria] = {
 					score: parseFloat(obj.score),
 					//uncertainty: parseFloat(obj.uncertainty),
 					//voting_right: parseFloat(obj.voting_right),
@@ -112,7 +111,7 @@ function DatasetManager() {
 	this.loadComparisons = () => new Promise((resolve, reject) => {
 		const REQ_COLS = ['public_username', 'video_a', 'video_b', 'criteria', 'score'/*, 'score_max'*/, 'week_date']
 		const ta = new Date()
-		THIS.zip.file('comparisons.csv').async('string').then(csvText => {
+		DSM.zip.file('comparisons.csv').async('string').then(csvText => {
 			// Séparer les lignes par le retour à la ligne
 			const rows = csvText.trim().split('\n')
 
@@ -135,17 +134,17 @@ function DatasetManager() {
 				}
 				return obj
 			}).forEach((obj) => {
-				if(!(obj.public_username in THIS.comparisons)) {
-					THIS.comparisons[obj.public_username] = {}
+				if(!(obj.public_username in DSM.comparisons)) {
+					DSM.comparisons[obj.public_username] = {}
 				}
-				if(!(obj.criteria in THIS.comparisons[obj.public_username])) {
-					THIS.comparisons[obj.public_username][obj.criteria] = {}
+				if(!(obj.criteria in DSM.comparisons[obj.public_username])) {
+					DSM.comparisons[obj.public_username][obj.criteria] = {}
 				}
-				if(!(obj.week_date in THIS.comparisons[obj.public_username][obj.criteria])) {
-					THIS.comparisons[obj.public_username][obj.criteria][obj.week_date] = []
+				if(!(obj.week_date in DSM.comparisons[obj.public_username][obj.criteria])) {
+					DSM.comparisons[obj.public_username][obj.criteria][obj.week_date] = []
 				}
 
-				THIS.comparisons[obj.public_username][obj.criteria][obj.week_date].push({
+				DSM.comparisons[obj.public_username][obj.criteria][obj.week_date].push({
 					pos: obj.video_a,
 					neg: obj.video_b,
 					score: parseFloat(obj.score),

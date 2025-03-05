@@ -1,11 +1,3 @@
-/**
- * This is the main Javascript file for Tournesol Entangler
- *
- * Here are all functions called by HTML actions (onLoad, buttons, ...), and function to update HTML
- * - Functions interacting with HTML (for example using document.getElementBy##) must not exist outside this JS file
- * - Functions that has no interaction with HTML must be moved to other JS files and imported
- */
-
 const dataset = new DatasetManager()
 const HTML_ELMS = {}
 
@@ -61,20 +53,7 @@ function onApplyUsername() {
 		setStatus('error', 'User not found (username is case sensitive)')
 		return
 	}
-
-	// Compute simple stats & display them
-	document.getElementById("stt_nb_videos").innerText = Object.keys(dataset.individualScores[currentSelectedUsername]).length
-	document.getElementById("stt_comparisons").innerText = Object.values(dataset.comparisons[currentSelectedUsername]['largely_recommended']).map(w => w.length).reduce((a,b)=>a+b,0)
-	document.getElementById("stt_connected_components").innerText = '?'
-	document.getElementById('stt_candidates').innerHTML = '?'
 	setStatus('success', 'Loaded user data: ' + currentSelectedUsername.replaceAll('<', '&lt;'))
-}
-
-
-function makeSuggestions() {
-	setStatus('working', 'Computing user data...')
-	const graph = new TnslGraph(dataset)
-
 }
 
 // // // Graph modes
@@ -175,13 +154,6 @@ async function showFullGraph() {
 	}
 
 	await new Promise((resolve)=>{
-		// connected components
-		const gm = {}
-		graph.data.groups.forEach(g => gm[g.length] = (gm[g.length] || 0) + 1)
-		const gs = Object.keys(gm)
-		gs.sort((a,b)=>+a<+b?1:-1)
-		document.getElementById("stt_connected_components").innerText = gs.map(size=>'' + size +(gm[size] > 1 ? `(x${gm[size]})` : '')).join(', ')
-
 		// Add graph viz to viewport
 		document.getElementById('graph').innerHTML = ''
 
@@ -195,14 +167,6 @@ async function showFullGraph() {
 			setStatus('success', 'Drawing complete')
 		}
 		zone.appendChild(graph.makeD3(_onDrawStart, _onEnd))
-
-		// Candidates
-		const suggested = graph.suggestComparisons()
-		if(suggested.length)
-			document.getElementById('stt_candidates').innerHTML = `<a target="_blank" rel="noopener noreferrer" href="https://tournesol.app/comparison?uidA=yt:${suggested[0][0].id}&uidB=yt:${suggested[0][1].id}">Compare on Tournesol</a>`
-		else
-			document.getElementById('stt_candidates').innerHTML = 'None'
-		console.log(suggested)
 
 		setTimeout(resolve)
 	})

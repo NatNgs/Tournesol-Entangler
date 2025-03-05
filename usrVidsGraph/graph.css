@@ -1,0 +1,60 @@
+:root {
+	--color-background-graph: white;
+	--color-background-header: rgb(255, 200, 0);
+	--color-text-header: rgba(0, 0, 0, 0.87);
+	--color-background-warn: rgb(18, 130, 178);
+	--color-text-warn: white;
+}
+
+#contentBody {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1em;
+}
+
+.graphBlock {
+	height: calc(100vh - var(--header-height) - var(--header-height) - 2em);
+	aspect-ratio: 1;
+	flex: 0;
+	display: flex;
+	flex-direction: column;
+}
+#graph {
+	background: var(--color-background-graph);
+	width: 100%;
+	flex: 1;
+	border-radius: .5em;
+}
+.vid_node {
+	cursor: grab;
+}
+.vid_node:active {
+	cursor: grabbing;
+}
+
+
+@media (max-width: 90vh) {
+	#contentBody {
+		flex-direction: column;
+	}
+	.graphBlock {
+		flex: 1;
+		height: unset;
+		width: 100%;
+	}
+}
+
+#actions {
+	flex: 1;
+}
+#actions > button {
+	display: block;
+}
+
+#stats {
+	margin: .5em;
+	display: inline-block;
+	min-width: 20em;
+	min-height: 100%;
+	flex: 1;
+}

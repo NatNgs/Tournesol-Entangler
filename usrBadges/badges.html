@@ -1,0 +1,56 @@
+<html>
+	<head>
+		<title>Tournesol Entangler</title>
+
+		<!-- External -->
+		<script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+
+		<!-- Tournesol Entangler -->
+		<script src="../main/common.js"></script>
+		<script src="../main/DatasetManager.js"></script>
+		<link rel="stylesheet" href="../main/common.css">
+
+		<!-- This page -->
+		<script src="badges.js"></script>
+		<link rel="stylesheet" href="badges.css">
+	</head>
+	<body onload="onPageLoad()">
+		<div id="header">
+			<div class="hf">
+				<h1 id="title"><a href="../index.html">Tournesol Entangler</a></h1>
+				<div class="tabs">
+					<a class="disabled">User stats</a>
+					<a href="../usrVidsGraph/graph.html">User graph</a>
+				</div>
+			</div>
+		</div>
+		<div id="content"> <!-- ========= -->
+			<div id="contentBody">
+				<div class="actions">
+					1. Download tournesol public dataset: <a href="https://tournesol.app/" target="_blank" rel="noopener noreferrer">tournesol.app</a> (see footer)<br/>
+					2. Import dataset zip file: <input type="file" id="datasetzip" accept=".zip" value="" onchange="onSetDatasetZip()"/><br/>
+					3. Select a user: <input type="text" id="username" placeholder="username"/><button id="userapply" onclick="onApplyUsername()">Apply</button><br/>
+				</div>
+				<br/>
+				<div id="loading_status" class="status">Import tournesol dataset to start</div>
+				<div class="stats">
+					<h1>Statistics</h1>
+					<div>Public videos: <span id="stt_nb_videos">?</span></div>
+					<div>Public comparisons: <span id="stt_comparisons">?</span></div>
+				</div>
+			</div>
+		</div> <!-- ===================== -->
+		<div id="footer">
+			<div class="hf">
+				<span>Last update 2025-03-05 - INDEV VERSION</span>
+				<span>
+					by NatNgs
+					<a href="https://tooting.ch/@natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/mastodon.svg"/></a>
+					<a href="https://github.com/natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/github.svg"/></a>
+					<a href="https://tournesol.app/users/NatNgs/recommendations" target="_blank" rel="noopener noreferrer">🌻</a>
+				</span>
+				<a href="https://tournesol.app/about" target="_blank" rel="noopener noreferrer">About Tournesol.app</a>
+			</div>
+		</div>
+	</body>
+</html>
