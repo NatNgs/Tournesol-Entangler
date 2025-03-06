@@ -10,31 +10,33 @@
 	background-size: 25%;
 	animation: AnimatedShine 8s linear infinite;
 	width: 30em;
+	overflow: hidden;
 }
 
 .badge.default {
-	background-color: #80B880;
-	animation: none;
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 20%, #0002 50%, transparent 80%,transparent 100%);
+	background-color: #893;
+	animation-duration: calc(15s - var(--pgs));
 }
 .badge.bronze {
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 20%, #0001 50%, transparent 80%,transparent 100%);
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 22.5%, #0003 50%, transparent 77.5%,transparent 100%);
 	background-color: #CD7F32;
-	animation-duration: calc(8s - var(--pgs));
+	animation-duration: calc(10s - var(--pgs));
 }
 .badge.silver {
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 20%, #FFF2 50%, transparent 80%,transparent 100%);
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 25%, #FFF4 50%, transparent 75%,transparent 100%);
 	background-color: silver;
 	animation-duration: calc(6s - var(--pgs));
 }
 .badge.gold {
 	border-color: goldenrod;
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 25%, #FFF3 50%, transparent 75%,transparent 100%);
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 30%, #FFF8 50%, transparent 70%,transparent 100%);
 	background-color: gold;
-	animation-duration: calc(4s - var(--pgs));
+	animation-duration: calc(3.5s - var(--pgs));
 }
-.badge.best {
+.badge.platinum {
 	border-color: white;
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 25%, #FFF3 50%, transparent 75%,transparent 100%);
+	background-image: linear-gradient(-45deg, transparent 0%,transparent 35%, #FFF5 50%, transparent 65%,transparent 100%);
 	background-color: #ACE;
 	animation-duration: 2s;
 	box-shadow: 0 0 5px 1px #ACE;
@@ -42,29 +44,35 @@
 
 /* Progress */
 
-.badge .progress {
+.badge .grades {
 	position: relative;
-	width: 100%;
-	height: 1.5em;
+	width: calc(100% + 1em);
+	margin: .3em 0 -.5em -.5em;
+	background-color: #888;
+	display: flex;
+	flex-direction: row;
+    flex-wrap: nowrap;
+    box-shadow: 0 -2px 5px 0 #888;
+}
+.badge .grades .progress.default {--progress-color: #893;}
+.badge .grades .progress.bronze {--progress-color: #B62;}
+.badge .grades .progress.silver {--progress-color: #BBB;}
+.badge .grades .progress.gold {--progress-color: #DA0;}
+.grades .progress {
 	font-size: 66.67%;
-	margin: .1em -.5em -.5em -.5em;
-	text-align: center;
+	text-align: right;
+	border-left: 1px solid var(--progress-color);
+	padding-right: .3em;
+	white-space: nowrap;
 }
-.badge .progress:not(.maxed) {
-	background-image: linear-gradient(90deg, #CD7F32 var(--progress), #0000 var(--progress));
-	border: 1px solid #8888;
-	border-radius: .25em;
-	background-color: #fff4;
+.badge .grades .progress {
+	background-image: linear-gradient(90deg, var(--progress-color) var(--progress), #0000 var(--progress));
 }
-.badge.bronze .progress {
-	background-image: linear-gradient(90deg, silver var(--progress), #0000 var(--progress));
-}
-.badge.silver .progress {
-	background-image: linear-gradient(90deg, gold var(--progress), #0000 var(--progress));
-}
-.badge.gold .progress {
-	background-image: linear-gradient(90deg, #ACE var(--progress), #0000 var(--progress));
-}
+
+.badge .progress.default {flex:1;}
+.badge .progress.bronze  {flex:2;}
+.badge .progress.silver  {flex:3;}
+.badge .progress.gold    {flex:4;}
 
 @keyframes AnimatedShine {
 	0%{background-position-x:-100%}
