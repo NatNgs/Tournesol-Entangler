@@ -39,13 +39,6 @@ async function onSetDatasetZip() {
 	}
 }
 
-const properGrades = {
-	'default': 'New',
-	'bronze': 'Bronze',
-	'silver': 'Silver',
-	'gold': 'Golden',
-	'platinum': 'Best'
-}
 async function onApplyUsername() {
 	const currentSelectedUsername = HTML_ELMS.usernameinpt.value.trim()
 	if(!currentSelectedUsername) return // No username set

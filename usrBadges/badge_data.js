@@ -1,8 +1,15 @@
 const gradesOrder = ['locked', 'default', 'bronze', 'silver', 'gold', 'platinum']
+const defaultGradesTitlePrefix = {
+	'locked': 'Not',
+	//'default': 'New',
+	'bronze': 'Bronze',
+	'silver': 'Silver',
+	'gold': 'Golden',
+	'platinum': 'Best'
+}
 
 class Badge {
-	constructor(title, selectedUser, fc_progress, info) {
-		this.title = title
+	constructor(defaultTitle, selectedUser, fc_progress, info) {
 		this.info = info
 		this.progress = fc_progress(selectedUser)
 
@@ -23,12 +30,15 @@ class Badge {
 
 		// Compute grades steps
 		this.grades = {
-			platinum: {title: title, minScore: scores[sortedUsers[0]]}, // FIRST user
-			gold: {title: title, minScore: scores[sortedUsers[10]]}, // Within top 10
-			silver: {title: title, minScore: scores[sortedUsers[(sortedUsers.length/10)|0]]}, // Within top 10%
-			bronze: {title: title, minScore: scores[sortedUsers[(sortedUsers.length/3)|0]]}, // Within top 33%
-			default: {title: title, minScore: 1}, // From score=1 to top 33%
-			locked: {title: 'Locked', minScore: 0}, // Score=0
+			platinum: {title: defaultTitle, minScore: scores[sortedUsers[0]]}, // FIRST user
+			gold: {title: defaultTitle, minScore: scores[sortedUsers[10]]}, // Within top 10
+			silver: {title: defaultTitle, minScore: scores[sortedUsers[(sortedUsers.length/10)|0]]}, // Within top 10%
+			bronze: {title: defaultTitle, minScore: scores[sortedUsers[(sortedUsers.length/3)|0]]}, // Within top 33%
+			default: {title: defaultTitle, minScore: 1}, // From score=1 to top 33%
+			locked: {title: defaultTitle, minScore: 0}, // Score=0
+		}
+		for(const grade in defaultGradesTitlePrefix) {
+			this.grades[grade].title = defaultGradesTitlePrefix[grade] + ' ' + this.grades[grade].title
 		}
 
 		// Find current grade
@@ -54,7 +64,7 @@ class Badge {
 		domBadge.classList.add("badge")
 		domBadge.classList.add(this.grade)
 		domBadge.style = `--progress:${100*totalProgress}%; --pgs:${gradeProgress}s;`
-		domBadge.innerText = properGrades[this.grade] + ' ' + this.title
+		domBadge.innerText = currentGrade.title
 
 		const domGrades = domBadge.appendChild(document.createElement('div'))
 		domGrades.classList.add('grades')
@@ -96,13 +106,17 @@ async function generateBadges(selectedUser, fc_onBadgeCreated) {
 	))
 
 	// -- BADGE 2 : Weekly contributor
-	await onBadgeCreated(new Badge(
+	let b = new Badge(
 		'Active Member',
 		selectedUser,
 		(user)=>(!dataset.comparisons[user])?0:
 			Object.values(dataset.comparisons[user]['largely_recommended'] || {}).length,
 		'weeks of activity'
-	))
+	)
+	b.grades.default.title = 'New Member'
+	b.grades.platinum.title = 'Most Active Member'
+	await onBadgeCreated(b)
+
 
 	// -- BADGE 3 - 13 : Criteria contributor
 	await appendCriteriaBadges(selectedUser, onBadgeCreated)
@@ -112,12 +126,7 @@ async function generateBadges(selectedUser, fc_onBadgeCreated) {
 	await appendFirstAndEarlyBadges(selectedUser, onBadgeCreated)
 
 	// -- BADGE 16 : Top 10 user
-	await onBadgeCreated(new Badge(
-		'Presence in Weekly Podium',
-		selectedUser,
-		(user) => { return 0 }, // TODO
-		'weeks as top 10 contributor'
-	))
+	await onBadgeCreated(generatePodiumBadge(selectedUser))
 
 	return unlockedBadges
 }
@@ -227,4 +236,38 @@ async function appendFirstAndEarlyBadges(selectedUser, fc_onBadgeCreated) {
 		(user) => (usersFirstContribs[user] || noFirst).early.length,
 		'early comparisons'
 	))
+}
+function generatePodiumBadge(selectedUser) {
+	// For every week, sort users by how many comparisons they made this week
+	const usrCmpsByWeek = {} // week: {user: #comparisons}
+	// dataset.comparisons = {<user>: {<criterion>: {<week>: [{pos: <vid>, neg: <vid>, score: <float>, score_max: <float>}]}}}
+	for(const user in dataset.comparisons) {
+		for(const week in dataset.comparisons[user]['largely_recommended']) {
+			if(!usrCmpsByWeek[week])
+				usrCmpsByWeek[week] = {}
+			usrCmpsByWeek[week][user] = dataset.comparisons[user]['largely_recommended'][week].length
+		}
+	}
+
+	// Keep only top 10 of every week
+	const usrsPodiums = {} // usr: #weeks
+	for(const week in usrCmpsByWeek) {
+		const sortedUsers = Object.keys(usrCmpsByWeek[week])
+		sortedUsers.sort((a,b)=>usrCmpsByWeek[week][b] - usrCmpsByWeek[week][a])
+		if(sortedUsers.length > 10) sortedUsers.length = 10
+		for(const u of sortedUsers) {
+			if(!usrsPodiums[u]) usrsPodiums[u] = 1
+			else usrsPodiums[u] += 1
+		}
+	}
+
+	const b = new Badge(
+		'Presence in Weekly Podium',
+		selectedUser,
+		(user) => (usrsPodiums[user] || 0),
+		'weeks as top 10 contributor'
+	)
+	b.grades.default.title = 'Few Presences in Weekly Podium'
+	b.grades.platinum.title = 'Most Presences in Weekly Podium'
+	return b;
 }
