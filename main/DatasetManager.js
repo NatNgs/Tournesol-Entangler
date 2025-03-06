@@ -65,7 +65,7 @@ function DatasetManager() {
 	})
 
 	this.loadIndividualScores = () => new Promise((resolve, reject) => {
-		const REQ_COLS = ['public_username', 'video', 'criteria', 'score'/*, 'uncertainty', 'voting_right'*/]
+		const REQ_COLS = ['public_username', 'video', 'criteria', 'score'/*, 'uncertainty'*/, 'voting_right']
 		const ta = new Date()
 		DSM.zip.file('individual_criteria_scores.csv').async('string').then(csvText => {
 			// Séparer les lignes par le retour à la ligne
@@ -99,7 +99,7 @@ function DatasetManager() {
 				DSM.individualScores[obj.public_username][obj.video][obj.criteria] = {
 					score: parseFloat(obj.score),
 					//uncertainty: parseFloat(obj.uncertainty),
-					//voting_right: parseFloat(obj.voting_right),
+					voting_right: parseFloat(obj.voting_right || 0),
 				}
 			})
 			console.log('Loaded ' + rows.length + ' individual scores in', (new Date()-ta)/1000, 'seconds')

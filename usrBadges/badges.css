@@ -4,7 +4,7 @@
 	margin: .25em;
 	padding: .5em;
 	border-radius: .5em;
-	border: .25em ridge gray;
+	border: .25em groove gray;
 	background-repeat: no-repeat;
 	background-position-x: -100%;
 	background-size: 25%;
@@ -12,25 +12,32 @@
 	width: 30em;
 	overflow: hidden;
 }
+.badge .description {
+	font-size: 80%;
+	display: inline-block;
+	position: relative;
+	width: 100%;
+	text-align: right;
+}
 
 .badge.default {
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 20%, #0002 50%, transparent 80%,transparent 100%);
+	background-image: linear-gradient(-70deg, transparent 0%,transparent 20%, #0002 50%, transparent 80%,transparent 100%);
 	background-color: #893;
 	animation-duration: calc(15s - var(--pgs));
 }
 .badge.bronze {
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 22.5%, #0003 50%, transparent 77.5%,transparent 100%);
+	background-image: linear-gradient(-60deg, transparent 0%,transparent 22.5%, #0003 50%, transparent 77.5%,transparent 100%);
 	background-color: #CD7F32;
 	animation-duration: calc(10s - var(--pgs));
 }
 .badge.silver {
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 25%, #FFF4 50%, transparent 75%,transparent 100%);
+	background-image: linear-gradient(-55deg, transparent 0%,transparent 25%, #FFF4 50%, transparent 75%,transparent 100%);
 	background-color: silver;
 	animation-duration: calc(6s - var(--pgs));
 }
 .badge.gold {
 	border-color: goldenrod;
-	background-image: linear-gradient(-45deg, transparent 0%,transparent 30%, #FFF8 50%, transparent 70%,transparent 100%);
+	background-image: linear-gradient(-50deg, transparent 0%,transparent 30%, #FFF8 50%, transparent 70%,transparent 100%);
 	background-color: gold;
 	animation-duration: calc(3.5s - var(--pgs));
 }
@@ -46,22 +53,22 @@
 
 .badge .grades {
 	position: relative;
-	width: calc(100% + 1em);
+	width: calc(100% + .8em);
 	margin: .3em 0 -.5em -.5em;
-	background-color: #888;
 	display: flex;
 	flex-direction: row;
-    flex-wrap: nowrap;
-    box-shadow: 0 -2px 5px 0 #888;
+	flex-wrap: nowrap;
+	filter: drop-shadow(0 0 5px black);
+	border-right: .2em solid #ACE; /* Rightmost border platinum color */
 }
 .badge .grades .progress.default {--progress-color: #893;}
 .badge .grades .progress.bronze {--progress-color: #B62;}
-.badge .grades .progress.silver {--progress-color: #BBB;}
+.badge .grades .progress.silver {--progress-color: #DDD;}
 .badge .grades .progress.gold {--progress-color: #DA0;}
 .grades .progress {
 	font-size: 66.67%;
 	text-align: right;
-	border-left: 1px solid var(--progress-color);
+	border-left: .2em solid var(--progress-color);
 	padding-right: .3em;
 	white-space: nowrap;
 }
