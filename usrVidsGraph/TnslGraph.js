@@ -4,18 +4,41 @@
  * @param {number} index numerical id
  * @param {DatasetManager} dataset
  */
-function Node(id, index, dataset) {
-	this.id = id // youtube video id
-	this.index = index // nodes.indexOf(#) == this node
-	this.group = -1 // groups.indexOf(#) contains this node
-	this.indiv_cmps = [] // list of node objects this one is linked to
-	this.distances = {} // distance from this node to others (only contains reachable ones) - nodes in indiv_cmps will have distance=1
-	this.distances[id] = 0 // distance to self = 0
-	this.dirrected = {} // distance from this node to others in dirrected graph mode (from this node to others only)
-	this.dirrected[id] = 0
-	this.n_contributors = Object.values(dataset.individualScores).filter(userscores => id in userscores).length // number of public contributors of this video
+class Node {
+	constructor(id, index, contributors, week) {
+		this.id = id // youtube video id
+		this.index = index // nodes.indexOf(#) == this node
+		this.group = -1 // groups.indexOf(#) contains this node
+		this.indiv_cmps = [] // list of node objects this one is linked to
+		this.distances = {} // distance from this node to others (only contains reachable ones) - nodes in indiv_cmps will have distance=1
+		this.distances[id] = 0 // distance to self = 0
+		this.dirrected = {} // distance from this node to others in dirrected graph mode (from this node to others only)
+		this.dirrected[id] = 0
+		this.n_contributors = contributors // number of public contributors of this video
+		this.week = week
 
-	// d3js Will set and use following properties: this.x, this.y, this.vx, this.vy
+		// d3js variables
+		this.x = null
+		this.y = null
+		this.vx = null
+		this.vy = null
+		this.fx = null
+		this.fy = null
+	}
+}
+class Edge {
+	constructor(source, target, val) {
+		this.id = source.id < target.id ? `link_${source.id}_${target.id}` : `link_${target.id}_${source.id}`
+		if(val >= 0) {
+			this.source = source
+			this.target = target
+			this.val = val
+		} else {
+			this.source = target
+			this.target = source
+			this.val = -val
+		}
+	}
 }
 
 function min(a,b,ifnull) {
@@ -31,43 +54,46 @@ function min(a,b,ifnull) {
 /**
  * @param {DatasetManager} dataset
  */
-function TnslGraph(dataset) {
-	console.log('TnslGraph', this)
+class TnslGraph {
+	constructor(dataset) {
+		console.log('TnslGraph', this)
+		this.dataset = dataset
 
-	// // // Properties // // //
-
-	this.data = {
-		nodes_index: {}, // map node.id => index (for d3js)
-		nodes: [], // list of node objects -- WARN: Node.index is the location of the node within this list, sort/pop carefully
-		links: [],
-		groups: [], // list of groups; every group is a list of node objects
+		this.data = {
+			nodes_index: {}, // map node.id => index (for d3js)
+			nodes: [], // list of node objects -- WARN: Node.index is the location of the node within this list, sort/pop carefully
+			links: [],
+			groups: [], // list of groups; every group is a list of node objects
+		}
+		this.div = null // @see _makeD3
 	}
-	this.div = null // @see _makeD3
 
 	// // // PUBLIC // // //
-	this.addLink = (na_id, nb_id, val) => {
+	addLink(na_id, nb_id, val, week) {
 		// nodes
 		if(!this.data.nodes_index[na_id] && this.data.nodes_index[na_id] !== 0) {
 			// Initiate new node na
 			const index = this.data.nodes.length
 			this.data.nodes_index[na_id] = index
-			this.data.nodes[index] = new Node(na_id, index, dataset)
+			this.data.nodes[index] = new Node(na_id, index, Object.values(this.dataset.individualScores).filter(userscores => nb_id in userscores).length, week)
 		}
 		const na = this.data.nodes[this.data.nodes_index[na_id]]
+		if(week < na.week) na.week = week
 
 		if(!this.data.nodes_index[nb_id] && this.data.nodes_index[nb_id] !== 0) {
 			// Initiate new node nb
 			const index = this.data.nodes.length
 			this.data.nodes_index[nb_id] = index
-			this.data.nodes[index] = new Node(nb_id, index, dataset)
+			this.data.nodes[index] = new Node(nb_id, index, Object.values(this.dataset.individualScores).filter(userscores => nb_id in userscores).length, week)
 		}
 		const nb = this.data.nodes[this.data.nodes_index[nb_id]]
+		if(week < nb.week) nb.week = week
 
-		// links
+		// edges
 		na.indiv_cmps.push(nb)
 		nb.indiv_cmps.push(na)
+		this.data.links.push(new Edge(na, nb, val, week))
 		if(val > 0) {
-			this.data.links.push({source: na, target: nb, val: val})
 			// Update dirrected distances
 			for(const nc in nb.dirrected) {
 				if(!isFinite(na.dirrected[nc]) || na.dirrected[nc] > nb.dirrected[nc] + 1) {
@@ -75,7 +101,6 @@ function TnslGraph(dataset) {
 				}
 			}
 		} else if(val < 0) {
-			this.data.links.push({source: nb, target: na, val: -val})
 			// Update dirrected distances
 			for(const nc in na.dirrected) {
 				if(!isFinite(nb.dirrected[nc]) || nb.dirrected[nc] > na.dirrected[nc] + 1) {
@@ -83,7 +108,6 @@ function TnslGraph(dataset) {
 				}
 			}
 		} else { // val == 0
-			this.data.links.push({source: nb, target: na, val: 0})
 			// Update dirrected distances
 			for(const nc of this.data.nodes) {
 				let a2c = na.dirrected[nc.id]
@@ -179,19 +203,8 @@ function TnslGraph(dataset) {
 		}
 	}
 
-	this.dirDistanceBetween = (n1, n2) => {
-		if(n1 === n2) return 0
-		n21 = n2.dirrected[n1.id]
-		n12 = n1.dirrected[n2.id]
-		return isFinite(n12) && isFinite(n21)
-			? (n12 > n21 ? n21 : n12)
-				: isFinite(n12) ? n12
-					: isFinite(n21) ? n21
-						: -1
-	}
-
 	// TODO: To be improved: Consider previous suggestions as existing links for next suggestions
-	this.suggestComparisons = () => {
+	suggestComparisons() {
 		const candidates = []
 		// Add in candidates, every node that:
 		// - have less comparisons (node.indiv_cmps.length) than public contributors (node.n_contributors)
@@ -204,7 +217,7 @@ function TnslGraph(dataset) {
 
 		// Sort them by their avg_dist
 		const avg_dists = {}
-		candidates.forEach(n => avg_dists[n.id] = _getNodeAvgDist(n))
+		candidates.forEach(n => avg_dists[n.id] = this._getNodeAvgDist(n))
 		candidates.sort((a,b) => avg_dists[a]>avg_dists[b]?1:-1)
 
 		const suggestions = []
@@ -214,7 +227,7 @@ function TnslGraph(dataset) {
 			const picked = candidates.shift()
 
 			// Keep from candidates, vids not present in picked directed graph
-			const against = candidates.filter(c => this.dirDistanceBetween(picked, c) < 0)
+			const against = candidates.filter(c => this.this._dirDistanceBetween(picked, c) < 0)
 
 			// Compute max distance from picked to other candidates
 			const maxD = against.map(c => c.distances[picked.id]).reduce((d,max)=>d>max?d:max,3) // Min distance to recom = 3
@@ -233,13 +246,13 @@ function TnslGraph(dataset) {
 	}
 
 	// TODO: Make nodes draggable (fix node currently being picked, and resume graph computation while dragging)
-	this.makeD3 = (onstart, onend) => {
+	makeD3(onstart, onend) {
 		// Select largest connected component
 		const nodes = this.data.groups[0]
 
 		// Compute nodes average distances
 		const avg_dists = {}
-		nodes.forEach(n => avg_dists[n.id] = _getNodeAvgDist(n))
+		nodes.forEach(n => avg_dists[n.id] = this._getNodeAvgDist(n))
 
 		// Init nodes location, as a spiral from most central to least central
 		nodes.sort((a,b) => avg_dists[a]>avg_dists[b]?1:-1)
@@ -259,23 +272,34 @@ function TnslGraph(dataset) {
 		})
 
 		// Create a simulation with several forces
-		const optimDist = Math.sqrt(d3.max(nodes.map(n => n.indiv_cmps.length)))
-		const alphaDecay = 1/Math.sqrt(nodes.length)
+		const maxAlpha = 0.3
+		const optimDist = 2*d3.max(nodes.map(n => n.indiv_cmps.length)) // Max node diameter
+		const sqNbN = Math.sqrt(nodes.length)
 		const simulation = d3.forceSimulation(nodes)
-			.alpha(0.3)
+			.alpha(maxAlpha)
 			.alphaTarget(0)
-			.alphaDecay(alphaDecay)
-			.velocityDecay(0)
-			.force('magnet_repulse', d3.forceManyBody().distanceMax(optimDist * Math.sqrt(nodes.length))) // Repulse nodes away from eachother - Disable when 'fix_radius' is enabled
-			.force('attract_comparisons', d3.forceLink(this.data.links)
-				.id(d => d.id)
-				.distance(optimDist)
-				//.strength((link) => (link.val ? Math.abs(link.val) : 10)/10)
-			)
+			.alphaDecay(maxAlpha/sqNbN)
+			.velocityDecay(0.1)
+			.force('magnet_repulse', d3.forceManyBody().distanceMax(optimDist * sqNbN)) // Repulse nodes away from eachother
+			.force('attract_comparisons', d3.forceLink(this.data.links).id(d => d.id).distance(optimDist))
 			.force('drag', () => {
 				// Apply drag only if node if moving towards outside of the graph
-				nodes.filter(n=>Math.abs(n.vx) > 1).forEach(n => n.vx *= .9)//Math.sign(n.vx) * Math.sqrt(Math.abs(n.vx)))
-				nodes.filter(n=>Math.abs(n.vy) > 1).forEach(n => n.vy *= .9)//Math.sign(n.vy) * Math.sqrt(Math.abs(n.vy)))
+				nodes.filter(n=>Math.abs(n.vx + n.x) > 1).forEach(n => n.vx *= .9)//Math.sign(n.vx) * Math.sqrt(Math.abs(n.vx)))
+				nodes.filter(n=>Math.abs(n.vy + n.y) > 1).forEach(n => n.vy *= .9)//Math.sign(n.vy) * Math.sqrt(Math.abs(n.vy)))
+			})
+			.force('recenter', () => {
+				// Center of gravity of the graph = Center of the viewport
+				const _nds = nodes.filter(n => (n.x || n.y) && (n.vx || n.vy))
+				let mid = [0,0]
+				_nds.forEach(n => {
+					mid[0] += n.x
+					mid[1] += n.y
+				})
+				mid = [mid[0]/_nds.length, mid[1]/_nds.length]
+				_nds.forEach(n => {
+					n.vx -= mid[0]
+					n.vy -= mid[1]
+				})
 			})
 
 		// Create div
@@ -290,13 +314,13 @@ function TnslGraph(dataset) {
 			.data(this.data.links)
 			.join('line')
 			.attr('class', 'cmp_line')
-			.attr('id', l => `link_${l.source.id}_${l.target.id}`)
+			.attr('id', l => l.id)
 
 		const popupOnHover = d3.select("body").append("div")
 			.attr("class", "tooltip")
 			.style("opacity", 0);
 
-		const f_nodeColor = _d3_node_colors(avg_dists)
+		const f_nodeColor = this._d3_node_colors(avg_dists)
 		const g_nodes = svg.append('g')
 			.attr('class', 'nodes')
 			.selectAll('circle')
@@ -338,7 +362,7 @@ function TnslGraph(dataset) {
 					}
 				}
 				for(const link of this.data.links) {
-					const linkElt = document.getElementById(`link_${link.source.id}_${link.target.id}`)
+					const linkElt = document.getElementById(link.id)
 					if(!linkElt) continue
 
 					if(isFinite(link.target.dirrected[n.id]) || isFinite(n.dirrected[link.source.id])) {
@@ -350,7 +374,7 @@ function TnslGraph(dataset) {
 						linkElt.style.opacity = dist < 0 ? 0.1 : 0.1+0.9/(1+dist)
 					}
 				}
-		   	})
+			})
 			.on('mouseleave', (evt,n) => {
 				popupOnHover.style("opacity", 0)
 				for(const targetElt of document.getElementsByClassName("vid_node")) {
@@ -371,7 +395,7 @@ function TnslGraph(dataset) {
 				.attr('x2', d => d.target.x)
 				.attr('y2', d => d.target.y)
 
-			let mm = [0, 0, 0, 0]
+			let mm = [99999, 99999, -99999, -99999]
 			g_nodes
 				.attr('cx', d => {
 					if(d.x < mm[0]) mm[0] = d.x
@@ -394,7 +418,7 @@ function TnslGraph(dataset) {
 				mm[0] -= r
 				mm[2] += r
 			}
-			svg.attr('viewBox', [mm[0], mm[1], mm[2]-mm[0], mm[3]-mm[1]])
+			svg.attr('viewBox', [mm[0]-optimDist/2, mm[1]-optimDist/2, mm[2]-mm[0]+optimDist, mm[3]-mm[1]+optimDist])
 		})
 
 		const _div = svg.node()
@@ -404,7 +428,7 @@ function TnslGraph(dataset) {
 
 		g_nodes.call(d3.drag()
 			.on('start', (evt) => {
-				simulation.alpha(0.3)
+				simulation.alpha(maxAlpha)
 				if (!evt.active) {
 					simulation.restart()
 					if(onstart) onstart()
@@ -416,7 +440,7 @@ function TnslGraph(dataset) {
 				if(evt.subject.fx !== evt.x || evt.subject.fy !== evt.y) {
 					evt.subject.fx = evt.x
 					evt.subject.fy = evt.y
-					simulation.alpha(0.3)
+					simulation.alpha(maxAlpha)
 				}
 			})
 			.on('end', (evt) => {
@@ -429,13 +453,13 @@ function TnslGraph(dataset) {
 
 	// // // PRIVATE // // //
 
-	const _getNodeAvgDist = (node) => {
+	_getNodeAvgDist(node) {
 		/**
 		 * @returns Average distance to every reachable node
 		 */
 		return Object.values(node.distances).reduce((a,b)=>a+b, 0) / (this.data.nodes.length - 1)
 	}
-	const _d3_node_colors = (map) => {
+	_d3_node_colors(map) {
 		const range = Object.values(map)
 		range.sort((a,b)=>a-b>0?1:-1)
 		const q0 = range[0]
@@ -446,5 +470,15 @@ function TnslGraph(dataset) {
 		console.debug('Colorscale:', [q0,q1,q2,q3,q4])
 		const _to_color = d3.scaleLinear().domain([q0,q1,q2,q3,q4]).range(['#664400', '#EEAA22', '#088000', '#0FCC00', '#11ddff'])
 		return (n) => _to_color(map[n.id])
+	}
+	_dirDistanceBetween(n1, n2) {
+		if(n1 === n2) return 0
+		n21 = n2.dirrected[n1.id]
+		n12 = n1.dirrected[n2.id]
+		return isFinite(n12) && isFinite(n21)
+			? (n12 > n21 ? n21 : n12)
+				: isFinite(n12) ? n12
+					: isFinite(n21) ? n21
+						: -1
 	}
 }

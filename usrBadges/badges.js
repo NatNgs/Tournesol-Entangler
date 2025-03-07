@@ -44,10 +44,9 @@ class Badge {
 		// Find current grade
 		this.grade = 'locked'
 		for(const g of gradesOrder) {
-			if(this.progress >= this.grades[g].minScore)
-				this.grade = g
-			else
+			if(this.progress < this.grades[g].minScore)
 				break
+			this.grade = g
 		}
 
 		this.totalProgress = this.progress / this.grades.platinum.minScore;
@@ -64,7 +63,7 @@ class Badge {
 		const domBadge = document.createElement('div')
 		domBadge.classList.add("badge")
 		domBadge.classList.add(this.grade)
-		domBadge.style = `--progress:${100*this.totalProgress}%; --pgs:${gradeProgress}s;`
+		domBadge.style = `--progress:${100*this.totalProgress}%; --pgs:${100*gradeProgress}%;`
 		domBadge.innerText = currentGrade.title
 
 		const domDescrption = domBadge.appendChild(document.createElement('div'))

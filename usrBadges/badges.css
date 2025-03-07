@@ -4,11 +4,10 @@
 	margin: .25em;
 	padding: .5em;
 	border-radius: .5em;
-	border: .25em groove gray;
+	border: 2px solid gray;
 	background-repeat: no-repeat;
-	background-position-x: -100%;
+	background-position-x: 100%;
 	background-size: 25%;
-	animation: AnimatedShine 8s linear infinite;
 	width: 30em;
 	overflow: hidden;
 }
@@ -23,23 +22,23 @@
 .badge.default {
 	background-image: linear-gradient(-70deg, transparent 0%,transparent 20%, #0002 50%, transparent 80%,transparent 100%);
 	background-color: #893;
-	animation-duration: calc(15s - var(--pgs));
+	background-position-x: var(--pgs);
 }
 .badge.bronze {
 	background-image: linear-gradient(-60deg, transparent 0%,transparent 22.5%, #0003 50%, transparent 77.5%,transparent 100%);
 	background-color: #CD7F32;
-	animation-duration: calc(10s - var(--pgs));
+	background-position-x: var(--pgs);
 }
 .badge.silver {
 	background-image: linear-gradient(-55deg, transparent 0%,transparent 25%, #FFF4 50%, transparent 75%,transparent 100%);
 	background-color: silver;
-	animation-duration: calc(6s - var(--pgs));
+	background-position-x: var(--pgs);
 }
 .badge.gold {
 	border-color: goldenrod;
 	background-image: linear-gradient(-50deg, transparent 0%,transparent 30%, #FFF8 50%, transparent 70%,transparent 100%);
 	background-color: gold;
-	animation-duration: calc(3.5s - var(--pgs));
+	background-position-x: var(--pgs);
 }
 .badge.platinum {
 	border-color: white;
