@@ -25,24 +25,43 @@ function setStatus(status_code, status_text) {
 }
 
 async function onSetDatasetZip() {
+	let datasetLoaded = false
 	const file = HTML_ELMS.fileInput.files[0]
 	if(file) {
+		HTML_ELMS.fileInput.setAttribute('disabled', 'disabled')
+		HTML_ELMS.userapply.setAttribute('disabled', 'disabled')
 		setStatus('working')
 		await dataset.setZip(file, (status) => setStatus(null, status))
 			.then(() => {
+				HTML_ELMS.fileInput.removeAttribute('disabled')
+				HTML_ELMS.userapply.removeAttribute('disabled')
 				setStatus('success', 'Dataset loaded successfully. Select a user and Apply to continue')
+				datasetLoaded = true
 			})
 			.catch((err) => {
+				HTML_ELMS.fileInput.removeAttribute('disabled')
 				console.error(err)
 				setStatus('error', 'Failed to load dataset (' + err + '). Please try again with another file')
+				HTML_ELMS.fileInput.value = null
 			})
+	} else {
+		setStatus('error', 'No file selected')
 	}
+	return datasetLoaded
 }
 
 async function onApplyUsername() {
 	const currentSelectedUsername = HTML_ELMS.usernameinpt.value.trim()
-	if(!currentSelectedUsername) return // No username set
-	if(!Object.keys(dataset.comparisons).length) return // Dataset not loaded yet
+	if(!currentSelectedUsername) {
+		// No username set
+		setStatus('error', 'No user selected')
+		return
+	}
+
+	if(!Object.keys(dataset.comparisons).length)
+		if(!await onSetDatasetZip()) // Dataset not loaded yet
+			return
+
 	if(!(currentSelectedUsername in dataset.comparisons)) {
 		setStatus('error', 'User not found (username is case sensitive)')
 		return

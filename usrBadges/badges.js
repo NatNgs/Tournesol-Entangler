@@ -35,7 +35,7 @@ class Badge {
 			silver: {title: defaultTitle, minScore: scores[sortedUsers[(sortedUsers.length/10)|0]]}, // Within top 10%
 			bronze: {title: defaultTitle, minScore: scores[sortedUsers[(sortedUsers.length/3)|0]]}, // Within top 33%
 			default: {title: defaultTitle, minScore: 1}, // From score=1 to top 33%
-			locked: {title: defaultTitle, minScore: 0}, // Score=0
+			locked: {title: defaultTitle, minScore: -Infinity},
 		}
 		for(const grade in defaultGradesTitlePrefix) {
 			this.grades[grade].title = defaultGradesTitlePrefix[grade] + ' ' + this.grades[grade].title

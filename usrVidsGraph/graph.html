@@ -14,7 +14,7 @@
 
 		<!-- This page -->
 		<script src="TnslGraph.js"></script>
-		<script src="graph.js"></script>
+		<script src="page.js"></script>
 		<link rel="stylesheet" href="graph.css">
 	</head>
 	<body onload="onPageLoad()">
@@ -30,10 +30,11 @@
 		<div id="content"> <!-- ========= -->
 			<ol class="actions">
 				<li>Download tournesol public dataset: <a href="https://tournesol.app/" target="_blank" rel="noopener noreferrer">tournesol.app</a> (see footer)</li>
-				<li>Import dataset zip file: <input type="file" id="datasetzip" name="tournesolDataset" accept=".zip" value="" onchange="onSetDatasetZip()"/></li>
+				<li>Import dataset zip file: <input type="file" id="datasetzip" name="tournesolDataset" accept=".zip" value=""/></li>
 				<li>Select a user: <input type="text" id="username" placeholder="username" name="username"/><button id="userapply" onclick="onApplyUsername()">Apply</button></li>
 			</ol>
 			<div id="loading_status" class="status">Import tournesol dataset to start</div>
+			<div id="graphInfo">&nbsp;</div>
 			<div class="graphBlock">
 				<div id="graph"></div>
 			</div>

@@ -56,7 +56,7 @@ function min(a,b,ifnull) {
  */
 class TnslGraph {
 	constructor(dataset) {
-		console.log('TnslGraph', this)
+		console.debug('TnslGraph', this)
 		this.dataset = dataset
 
 		this.data = {
@@ -337,6 +337,8 @@ class TnslGraph {
 					.style("left", (evt.pageX + 10) + "px")
 					.style("top", (evt.pageY - 15) + "px");
 
+				document.getElementById('graphInfo').innerHTML = `Last highlighted video: <a href="https://tournesol.app/entities/yt:${n.id}"  target="_blank">${n.id}</a>`
+
 				for(const target of this.data.nodes) {
 					const targetElt = document.getElementById(`node_${target.id}`)
 					if(!targetElt) continue
@@ -423,27 +425,35 @@ class TnslGraph {
 
 		const _div = svg.node()
 		this.div = _div
+
+		let simulating = true
 		if(onstart) onstart()
-		if(onend) simulation.on('end', onend)
+		simulation.on('end', ()=>{
+			simulating=false
+			if(onend) onend()
+		})
 
 		g_nodes.call(d3.drag()
+			.filter((evt) => {
+				return !(evt.ctrlKey || evt.shiftKey || evt.altKey || evt.metaKey)
+			})
 			.on('start', (evt) => {
-				simulation.alpha(maxAlpha)
-				if (!evt.active) {
-					simulation.restart()
-					if(onstart) onstart()
-				}
-				evt.subject.fx = evt.subject.x
-				evt.subject.fy = evt.subject.y
+				svg.attr('class', 'grabbing')
 			})
 			.on('drag', (evt) => {
 				if(evt.subject.fx !== evt.x || evt.subject.fy !== evt.y) {
 					evt.subject.fx = evt.x
 					evt.subject.fy = evt.y
 					simulation.alpha(maxAlpha)
+					if (!simulating) {
+						simulating=true
+						simulation.restart()
+						if(onstart) onstart()
+					}
 				}
 			})
 			.on('end', (evt) => {
+				svg.attr('class', '')
 				evt.subject.fx = undefined
 				evt.subject.fy = undefined
 			})

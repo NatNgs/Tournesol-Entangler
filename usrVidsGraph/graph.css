@@ -20,13 +20,12 @@
 	flex: 1;
 	border-radius: .5em;
 }
-.vid_node {
-	cursor: grab;
-}
-.vid_node:active {
+#graph svg.grabbing {
 	cursor: grabbing;
 }
-
+.vid_node {
+	cursor: crosshair;
+}
 
 @media (max-width: 90vh) {
 	.graphBlock {

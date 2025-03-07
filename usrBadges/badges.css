@@ -67,9 +67,10 @@
 .grades .progress {
 	font-size: 66.67%;
 	text-align: right;
-	border-left: .2em solid var(--progress-color);
-	padding-right: .3em;
+	border-left: .25em solid var(--progress-color);
+	padding-right: .5em;
 	white-space: nowrap;
+	margin-left: -.25em;
 }
 .badge .grades .progress {
 	background-image: linear-gradient(90deg, var(--progress-color) var(--progress), #0000 var(--progress));
