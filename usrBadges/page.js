@@ -30,8 +30,10 @@ async function onSetDatasetZip() {
 	if(file) {
 		HTML_ELMS.fileInput.setAttribute('disabled', 'disabled')
 		HTML_ELMS.userapply.setAttribute('disabled', 'disabled')
-		setStatus('working')
+		setStatus('working', 'Loading dataset...')
 		await dataset.setZip(file, (status) => setStatus(null, status))
+			.then(() => setStatus('working', 'Initializing badges...'))
+			.then(async () => await initBadges(dataset))
 			.then(() => {
 				HTML_ELMS.fileInput.removeAttribute('disabled')
 				HTML_ELMS.userapply.removeAttribute('disabled')
@@ -72,8 +74,7 @@ async function onApplyUsername() {
 	badges_html.innerHTML = "" // Reset displayed badges
 
 	const badges = []
-	await generateBadges(currentSelectedUsername, (badge) => {
-		badge.dom = badge.toDOM()
+	await getUserBadges(currentSelectedUsername, (badge) => {
 		if(!badge.dom) return
 
 		// Sort badges by grade (platinum first), then by progress (most progress first)

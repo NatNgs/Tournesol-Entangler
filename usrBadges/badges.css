@@ -1,6 +1,7 @@
 
 .badge {
 	display: inline-block;
+	position: relative;
 	margin: .25em;
 	padding: .5em;
 	border-radius: .5em;
@@ -11,6 +12,12 @@
 	width: 30em;
 	overflow: hidden;
 }
+.badge .currScore {
+	display: inline-block;
+	position: absolute;
+	right: 1em;
+	font-style: italic;
+}
 .badge .description {
 	font-size: 80%;
 	display: inline-block;
@@ -19,9 +26,14 @@
 	text-align: right;
 }
 
+.badge.locked {
+	opacity: 66.7%;
+	background-image: none;
+	background-color: transparent;
+}
 .badge.default {
 	background-image: linear-gradient(-70deg, transparent 0%,transparent 20%, #0002 50%, transparent 80%,transparent 100%);
-	background-color: #893;
+	background-color: #BC4;
 	background-position-x: var(--pgs);
 }
 .badge.bronze {
@@ -59,8 +71,9 @@
 	flex-wrap: nowrap;
 	filter: drop-shadow(0 0 5px black);
 	border-right: .2em solid #ACE; /* Rightmost border platinum color */
+	background: #0001;
 }
-.badge .grades .progress.default {--progress-color: #893;}
+.badge .grades .progress.default {--progress-color: #BC4;}
 .badge .grades .progress.bronze {--progress-color: #B62;}
 .badge .grades .progress.silver {--progress-color: #DDD;}
 .badge .grades .progress.gold {--progress-color: #DA0;}

@@ -5,6 +5,24 @@ class DatasetManager {
 		this.individualScores = {} // {<user>: {<vid>: {<criterion>: {score: <float>, uncertainty: <float>, voting_right: <float>}}}}
 		this.collectiveScores = {} // {<vid>: {<criterion>: {score: <float>, uncertainty: <float>}}}
 		this.comparisons = {} // {<user>: {<criterion>: {<week>: [{pos: <vid>, neg: <vid>, score: <float>, score_max: <float>}]}}}
+		this.contributors = {} // {<vid>: {<criterion>: {<user: <voting_right>}}}
+	}
+
+	async computeContributors() {
+		for(const user in this.individualScores) {
+			for(const vid in this.individualScores[user]) {
+				if(!this.contributors[vid])
+					this.contributors[vid] = {}
+				for(const criterion in this.individualScores[user][vid]) {
+					if(!this.contributors[vid][criterion])
+						this.contributors[vid][criterion] = {}
+					this.contributors[vid][criterion][user] = this.individualScores[user][vid][criterion].voting_right
+				}
+			}
+		}
+	}
+	getContributorsCount(vid, criterion) {
+		return Object.keys((this.contributors[vid]||{})[criterion]||{}).length
 	}
 
 	async setZip(file, onUpdate) {
@@ -15,6 +33,8 @@ class DatasetManager {
 				.then(() => this.loadCollectiveScores())
 				.then(() => onUpdate('Loading individual scores...'))
 				.then(() => this.loadIndividualScores())
+				.then(() => onUpdate('Computing contributors data...'))
+				.then(() => this.computeContributors())
 				.then(() => onUpdate('Loading comparisons...'))
 				.then(() => this.loadComparisons())
 	}
