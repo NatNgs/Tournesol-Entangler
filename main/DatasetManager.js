@@ -8,23 +8,6 @@ class DatasetManager {
 		this.contributors = {} // {<vid>: {<criterion>: {<user: <voting_right>}}}
 	}
 
-	async computeContributors() {
-		for(const user in this.individualScores) {
-			for(const vid in this.individualScores[user]) {
-				if(!this.contributors[vid])
-					this.contributors[vid] = {}
-				for(const criterion in this.individualScores[user][vid]) {
-					if(!this.contributors[vid][criterion])
-						this.contributors[vid][criterion] = {}
-					this.contributors[vid][criterion][user] = this.individualScores[user][vid][criterion].voting_right
-				}
-			}
-		}
-	}
-	getContributorsCount(vid, criterion) {
-		return Object.keys((this.contributors[vid]||{})[criterion]||{}).length
-	}
-
 	async setZip(file, onUpdate) {
 			onUpdate('Extracting Dataset...')
 			return new JSZip().loadAsync(file)
@@ -70,16 +53,10 @@ class DatasetManager {
 					}
 					return obj
 				}).forEach((obj) => {
-					if (!(obj.video in this.collectiveScores)) {
-						this.collectiveScores[obj.video] = {}
-					}
-					if (!(obj.criteria in this.collectiveScores[obj.video])) {
-						this.collectiveScores[obj.video][obj.criteria] = {}
-					}
-					this.collectiveScores[obj.video][obj.criteria] = {
+					this.collectiveScores.deepSet(obj.video,obj.criteria, {
 						score: parseFloat(obj.score),
 						//uncertainty: parseFloat(obj.uncertainty),
-					}
+					})
 				})
 				console.log('Loaded ' + rows.length + ' collective scores in', (new Date() - ta) / 1000, 'seconds')
 			})
@@ -116,17 +93,11 @@ class DatasetManager {
 					}
 					return obj
 				}).forEach((obj) => {
-					if (!(obj.public_username in this.individualScores)) {
-						this.individualScores[obj.public_username] = {}
-					}
-					if (!(obj.video in this.individualScores[obj.public_username])) {
-						this.individualScores[obj.public_username][obj.video] = {}
-					}
-					this.individualScores[obj.public_username][obj.video][obj.criteria] = {
+					this.individualScores.deepSet(obj.public_username,obj.video,obj.criteria, {
 						score: parseFloat(obj.score),
 						//uncertainty: parseFloat(obj.uncertainty),
 						voting_right: parseFloat(obj.voting_right || 0),
-					}
+					})
 				})
 				console.log('Loaded ' + rows.length + ' individual scores in', (new Date() - ta) / 1000, 'seconds')
 			})
@@ -163,17 +134,7 @@ class DatasetManager {
 					}
 					return obj
 				}).forEach((obj) => {
-					if (!(obj.public_username in this.comparisons)) {
-						this.comparisons[obj.public_username] = {}
-					}
-					if (!(obj.criteria in this.comparisons[obj.public_username])) {
-						this.comparisons[obj.public_username][obj.criteria] = {}
-					}
-					if (!(obj.week_date in this.comparisons[obj.public_username][obj.criteria])) {
-						this.comparisons[obj.public_username][obj.criteria][obj.week_date] = []
-					}
-
-					this.comparisons[obj.public_username][obj.criteria][obj.week_date].push({
+					this.comparisons.setDefault(obj.public_username,obj.criteria,obj.week_date, []).push({
 						pos: obj.video_a,
 						neg: obj.video_b,
 						score: parseFloat(obj.score),
@@ -185,5 +146,18 @@ class DatasetManager {
 			.then(resolve)
 			.catch(reject)
 		})
+	}
+
+	async computeContributors() {
+		for(const user in this.individualScores) {
+			for(const vid in this.individualScores[user]) {
+				for(const criterion in this.individualScores[user][vid]) {
+					this.contributors.deepSet(vid,criterion,user, this.individualScores[user][vid][criterion].voting_right)
+				}
+			}
+		}
+	}
+	getContributorsCount(vid, criterion) {
+		return this.contributors.getDefault(vid,criterion, {}).size()
 	}
 }

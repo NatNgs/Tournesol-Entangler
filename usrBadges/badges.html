@@ -30,7 +30,7 @@
 		<div id="content"> <!-- ========= -->
 			<ol class="actions">
 				<li>Download tournesol public dataset: <a href="https://tournesol.app/" target="_blank" rel="noopener noreferrer">tournesol.app</a> (see footer)</li>
-				<li>Import dataset zip file: <input type="file" id="datasetzip" accept=".zip" name="tournesolDataset" value=""/></li>
+				<li>Import dataset zip file: <input type="file" id="datasetzip" accept=".zip" name="tournesolDataset" onchange="onSetDatasetZip()"/></li>
 				<li>Select a user: <input type="text" id="username" placeholder="username"/><button id="userapply" onclick="onApplyUsername()">Apply</button></li>
 			</ol>
 			<div id="loading_status" class="status">Import tournesol dataset to start</div>
@@ -44,7 +44,7 @@
 		</div> <!-- ===================== -->
 		<div id="footer">
 			<div class="hf">
-				<span>Last update 2025-03-12</span>
+				<span>Last update 2025-03-24</span>
 				<span>
 					by NatNgs
 					<a href="https://tooting.ch/@natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/mastodon.svg"/></a>

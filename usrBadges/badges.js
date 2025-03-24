@@ -1,15 +1,23 @@
 const gradesOrder = ['locked', 'default', 'bronze', 'silver', 'gold', 'platinum']
 
 const _BADGE_MODELS = []
+
+
 class BadgeModel {
 	constructor(defaultTitle, fc_progress, info, dataset) {
+		/**
+		 * defaultTitle: str, title of the Badge (can be overriden after construction by changing this.grades[<level>].title)
+		 * fc_progress: function(dataset, username) that returns a map {date(iso str): score(float)}
+		 * info: description of the badge score meaning, as the end of a sentense begining with the score like "<score> <info>"
+		 * dataset: the dataset where to get the data from
+		 */
 		this.info = info
 		this.fc_progress = fc_progress
-		this.user_scores = {}
+		this.user_scores = {} // user: score
 
 		// Compute every other users score for this badge using fc
 		for(const user in dataset.individualScores) {
-			const usc = fc_progress(user)
+			const usc = fc_progress(dataset, user)
 			if(usc && usc > 0)
 				this.user_scores[user] = usc
 		}
@@ -20,7 +28,7 @@ class BadgeModel {
 
 		// Compute grades steps
 		this.grades = {
-			platinum: {title: 'Best ' + defaultTitle, minScore: this.user_scores[sortedUsers[0]]}, // FIRST user
+			platinum: {title: 'Best ' + defaultTitle, minScore: this.maxScore}, // FIRST user
 			gold: {title: 'Golden ' + defaultTitle, minScore: 1000},
 			silver: {title: 'Silver ' + defaultTitle, minScore: 100},
 			bronze: {title: 'Bronze ' + defaultTitle, minScore: 10},
@@ -139,7 +147,7 @@ async function initBadges(dataset) {
 	// -- BADGE 1 : Weekly contributor
 	let b = new BadgeModel(
 		'Active Member',
-		(user)=>(!dataset.comparisons[user])?0:Object.values(dataset.comparisons[user]['largely_recommended'] || {}).length,
+		(ds,user)=>ds.comparisons.getDefault(user,'largely_recommended',{}).size(),
 		'weeks of activity',
 		dataset
 	)
@@ -153,8 +161,8 @@ async function initBadges(dataset) {
 	// -- BADGE 2 : Number of compared videos --
 	_BADGE_MODELS.push(new BadgeModel(
 		'Content Contributor',
-		(user) => Object.keys(dataset.individualScores[user]).filter(vid =>
-			dataset.getContributorsCount(vid, 'largely_recommended')>=3
+		(ds,user) => Object.keys(ds.individualScores[user]).filter(vid =>
+			ds.getContributorsCount(vid, 'largely_recommended')>=3
 		).length,
 		'videos compared*',
 		dataset
@@ -163,11 +171,11 @@ async function initBadges(dataset) {
 	// -- BADGE 3 : Trusted contributor
 	b = new BadgeModel(
 		'Valued Contributor',
-		(user) => {
+		(ds,user) => {
 			let sum = 0
-			for(const vid in dataset.individualScores[user]) {
-				if(dataset.getContributorsCount(vid, 'largely_recommended')>=3)
-					sum += dataset.individualScores[user][vid]['largely_recommended']?.voting_right || 0
+			for(const vid in ds.individualScores[user]) {
+				if(ds.getContributorsCount(vid, 'largely_recommended')>=3)
+					sum += ds.individualScores[user][vid]['largely_recommended']?.voting_right || 0
 			}
 			return sum
 		},
@@ -191,15 +199,13 @@ async function initBadges(dataset) {
 
 async function initCriteriaBadges(dataset) {
 	const _countCriterionComparison = (criterion) => {
-		return (user)=>{
+		return (ds,user)=>{
 			let val = 0
-			if(dataset.comparisons[user] && dataset.comparisons[user][criterion]) {
-				for(const week in dataset.comparisons[user][criterion]) {
-					val += dataset.comparisons[user][criterion][week].filter(c =>
-						dataset.getContributorsCount(c.pos, criterion) >= 3
-						|| dataset.getContributorsCount(c.neg, criterion).length >= 3
-					).length
-				}
+			for(const week in ds.comparisons.getDefault(user,criterion,{})) {
+				val += ds.comparisons[user][criterion][week].filter(c =>
+					ds.getContributorsCount(c.pos, criterion) >= 3 ||
+					ds.getContributorsCount(c.neg, criterion) >= 3
+				).length
 			}
 			return val
 		}
@@ -239,13 +245,7 @@ async function initFirstAndEarlyBadges(dataset) {
 		for(const week in dataset.comparisons[user]['largely_recommended']) {
 			for(const cmp of dataset.comparisons[user]['largely_recommended'][week]) {
 				for(const vid of [cmp.pos, cmp.neg]) {
-					if(!vidFirstContrib[vid]) {
-						vidFirstContrib[vid] = {}
-					}
-					if(!vidFirstContrib[vid][week]) {
-						vidFirstContrib[vid][week] = {}
-					}
-					vidFirstContrib[vid][week][user] = true
+					vidFirstContrib.deepSet(vid, week, user, true)
 				}
 			}
 		}
@@ -295,12 +295,11 @@ async function initFirstAndEarlyBadges(dataset) {
 			}
 		}
 	}
-	const noFirst = {first:[], early:[], follow:[]}
 
 	// First contributor badge for how many time the user is alone in vidos of vidFirstContrib
 	_BADGE_MODELS.push(new BadgeModel(
 		'Video First Contributor',
-		(user) => (usersFirstContribs[user] || noFirst).first.length,
+		(ds,user) => usersFirstContribs.getDefault(user,'first', []).length,
 		"videos compared as the first contributor*",
 		dataset
 	))
@@ -308,18 +307,18 @@ async function initFirstAndEarlyBadges(dataset) {
 	// Early contributor badge for how many time the user is not alone in vidFirstContrib
 	_BADGE_MODELS.push(new BadgeModel(
 		'Early Contributor',
-		(user) => (usersFirstContribs[user] || noFirst).early.length,
+		(ds,user) => usersFirstContribs.getDefault(user,'early', []).length,
 		"videos compared before they had 3 contributors*",
 		dataset
 	))
 
 	// Early contributor badge for how many time the user is not alone in vidFirstContrib
-	_BADGE_MODELS.push(new BadgeModel(
+	/*_BADGE_MODELS.push(new BadgeModel(
 		'Recommendation Follower',
-		(user) => (usersFirstContribs[user] || noFirst).follow.length,
+		(ds,user) => usersFirstContribs.getDefault(user,'follow', []).length,
 		"videos compared that already had 3+ contributors*",
 		dataset
-	))
+	))*/
 }
 async function initPodiumBadge(dataset) {
 	// For every week, sort users by how many comparisons they made this week
@@ -327,9 +326,7 @@ async function initPodiumBadge(dataset) {
 	// dataset.comparisons = {<user>: {<criterion>: {<week>: [{pos: <vid>, neg: <vid>, score: <float>, score_max: <float>}]}}}
 	for(const user in dataset.comparisons) {
 		for(const week in dataset.comparisons[user]['largely_recommended']) {
-			if(!usrCmpsByWeek[week])
-				usrCmpsByWeek[week] = {}
-			usrCmpsByWeek[week][user] = dataset.comparisons[user]['largely_recommended'][week].length
+			usrCmpsByWeek.deepSet(week,user, dataset.comparisons[user]['largely_recommended'][week].length)
 		}
 	}
 
@@ -347,7 +344,7 @@ async function initPodiumBadge(dataset) {
 
 	_BADGE_MODELS.push(new BadgeModel(
 		'Weekly Podium Presence',
-		(user) => (usrsPodiums[user] || 0),
+		(ds,user) => usrsPodiums.getDefault(user, 0),
 		'weeks as top 10 contributor',
 		dataset
 	))
