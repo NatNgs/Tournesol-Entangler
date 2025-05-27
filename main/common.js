@@ -1,5 +1,9 @@
 
+// Common mistake
+print = console.debug
+
 // POLYFILL
+
 
 Object.defineProperty(Object.prototype, "getDefault", {
 	value: function(...params) {

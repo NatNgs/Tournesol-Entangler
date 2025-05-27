@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Tournesol Entangler</title>
+
+		<!-- External -->
+		<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+		<script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+
+		<!-- Tournesol Entangler -->
+		<script src="../main/common.js"></script>
+		<script src="../main/DatasetManager.js"></script>
+		<link rel="stylesheet" href="../main/common.css">
+
+		<!-- This page -->
+		<script src="UsersProximGraph.js"></script>
+		<script src="page.js"></script>
+		<link rel="stylesheet" href="page.css">
+	</head>
+	<body onload="onPageLoad()">
+		<div id="header">
+			<div class="hf">
+				<h1 id="title"><a href="../index.html">Tournesol Entangler</a></h1>
+				<div class="tabs">
+					<a href="../usrBadges/badges.html">User stats</a>
+					<a href="../usrVidsGraph/graph.html">User graph</a>
+					<a class="disabled">Community graph</a>
+				</div>
+			</div>
+		</div>
+		<div id="content"> <!-- ========= -->
+			<ol class="actions">
+				<li>Download tournesol public dataset: <a href="https://tournesol.app/" target="_blank" rel="noopener noreferrer">tournesol.app</a> (see footer)</li>
+				<li>Import dataset zip file: <input type="file" id="datasetzip" name="tournesolDataset" accept=".zip" value="" onchange="onSetDatasetZip()"/></li>
+			</ol>
+			<div id="loading_status" class="status">Import tournesol dataset to start</div>
+			<div class="graphBlock">
+				<div id="graph"></div>
+			</div>
+		</div> <!-- ===================== -->
+		<div id="footer">
+			<div class="hf">
+				<span>Last update 2025-05-27</span>
+				<span>
+					by NatNgs
+					<a href="https://tooting.ch/@natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/mastodon.svg"/></a>
+					<a href="https://github.com/natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/github.svg"/></a>
+					<a href="https://tournesol.app/users/NatNgs/recommendations" target="_blank" rel="noopener noreferrer">🌻</a>
+				</span>
+				<a href="https://tournesol.app/about" target="_blank" rel="noopener noreferrer">About Tournesol.app</a>
+			</div>
+		</div>
+	</body>
+</html>

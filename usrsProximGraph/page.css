@@ -1,0 +1,35 @@
+:root {
+	--color-background-graph: white;
+	--color-background-header: rgb(255, 200, 0);
+	--color-text-header: rgba(0, 0, 0, 0.87);
+	--color-background-warn: rgb(18, 130, 178);
+	--color-text-warn: white;
+}
+
+.graphBlock {
+	height: calc(100vh - var(--footer-height) - 4em);
+	aspect-ratio: 1;
+	display: flex;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 1em;
+}
+#graph {
+	background: var(--color-background-graph);
+	width: 100%;
+	flex: 1;
+	border-radius: .5em;
+}
+#graph svg.grabbing {
+	cursor: grabbing;
+}
+.usr_node {
+	cursor: crosshair;
+}
+
+@media (max-width: 90vh) {
+	.graphBlock {
+		height: unset;
+		width: 100%;
+	}
+}
