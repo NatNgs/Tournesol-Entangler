@@ -245,7 +245,6 @@ class TnslGraph {
 		return suggestions
 	}
 
-	// TODO: Make nodes draggable (fix node currently being picked, and resume graph computation while dragging)
 	makeD3(onstart, onend) {
 		// Select largest connected component
 		const nodes = this.data.groups[0]
@@ -261,7 +260,13 @@ class TnslGraph {
 			n.optiR = (avg_dists[n.id]-1) * Math.sqrt(nodes.length)
 			if(n.x && n.y) return
 
-			// TODO: Check if node have link to other nodes already having x & y set; if so, set this node location to the average of them
+			if(same_x.length && same_y.length) {
+				n.x = (same_x[0].x + same_y[0].x) / 2
+				n.y = (same_x[0].y + same_y[0].y) / 2
+				n.vx = 0
+				n.vy = 0
+				return
+			}
 
 			// Set node location near 0,0, with random angle and radius = optiR
 			let ang = i*n.optiR
@@ -304,7 +309,6 @@ class TnslGraph {
 
 		// Create div
 		const svg = d3.create('svg').attr('viewBox', [-100, -100, 200, 200])
-
 
 		// Add a line for each link, and a circle for each node.
 		const g_links = svg.append('g')

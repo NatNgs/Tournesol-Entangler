@@ -71,7 +71,7 @@ async function onApplyUsername() {
 }
 
 // // // Graph modes
-
+let graph
 async function showFullGraph() {
 	if(!dataset || !currentSelectedUsername) {
 		return alert("Full graph requires to select dataset and a user")
@@ -81,7 +81,7 @@ async function showFullGraph() {
 	}
 
 	// Show loading
-	const graph = new TnslGraph(dataset)
+	graph = new TnslGraph(dataset)
 
 	const weeks = Object.keys(dataset.comparisons[currentSelectedUsername]['largely_recommended'])
 	weeks.sort()

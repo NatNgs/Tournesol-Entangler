@@ -105,6 +105,9 @@ div.tooltip {
 .status.error {
 	background: #B24211;
 }
+.status.warning {
+	background: #B28211;
+}
 .status.success {
 	background: #60A108;
 }

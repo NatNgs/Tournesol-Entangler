@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Tournesol Entangler</title>
+
+		<!-- External -->
+		<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/graphology@0.26.0/dist/graphology.umd.min.js"></script>
+
+		<!-- Tournesol Entangler -->
+		<script src="../main/common.js"></script>
+		<script src="../main/DatasetManager.js"></script>
+		<link rel="stylesheet" href="../main/common.css">
+
+		<!-- This page -->
+		<script src="page.js"></script>
+		<script src="suggest.js"></script>
+		<link rel="stylesheet" href="suggest.css">
+	</head>
+	<body onload="onPageLoad()">
+		<div id="header">
+			<div class="hf">
+				<h1 id="title"><a href="../index.html">Tournesol Entangler</a></h1>
+				<div class="tabs">
+					<a href="../usrBadges/badges.html">User stats</a>
+					<a href="../usrVidsGraph/graph.html">User graph</a>
+					<a class="disabled">Suggestions</a>
+					<a href="../usrsProximGraph/page.html">Community graph</a>
+				</div>
+			</div>
+		</div>
+		<div id="content"> <!-- ========= -->
+			<ol class="actions">
+				<li>Download tournesol public dataset: <a href="https://tournesol.app/" target="_blank" rel="noopener noreferrer">tournesol.app</a> (see footer)</li>
+				<li>Import dataset zip file: <input type="file" id="datasetzip" accept=".zip" name="tournesolDataset" onchange="onSetDatasetZip()"/></li>
+				<li>Select a user: <input type="text" id="username" placeholder="username"/><button id="userapply" onclick="onApplyUsername()">Apply / Refresh</button></li>
+			</ol>
+			<div id="loading_status" class="status">Import tournesol dataset to start</div>
+			<h1>Comparisons suggestions</h1>
+			<div>Comparisons computed to greatly improve your 'Largely Recommended' scores quality</div>
+			<ol id="suggestionsContainer"></ol>
+			<div>Legend: <br/>- "(1/2)" : you have made 1 public comparison, and there are 2 contributors<br/>- 🔝 : has never lost a comparison yet</div>
+			<hr/>
+			<div>Suggests videos from your already public compared ones (having few comparisons, many contributors, or only winning comparisons so far). Then make pairs with no direct or transitive comparison between them.</div><br/>
+			<div>Note: there is no cache or memory on this page. Refreshing or changing user will reset hidden lines</div>
+
+			<!-- Modal -->
+			<div id="tournesol-modal" hidden="hidden" onclick="closeTournesolModal()">
+				<div class="modal-content">
+					<iframe id="tournesol-iframe"></iframe>
+				</div>
+			</div>
+		</div> <!-- ===================== -->
+		<div id="footer">
+			<div class="hf">
+				<span>Last update 2026-08-15</span>
+				<span>
+					by NatNgs
+					<a href="https://tooting.ch/@natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/mastodon.svg"/></a>
+					<a href="https://github.com/natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/github.svg"/></a>
+					<a href="https://tournesol.app/users/NatNgs/recommendations" target="_blank" rel="noopener noreferrer">🌻</a>
+				</span>
+				<a href="https://tournesol.app/about" target="_blank" rel="noopener noreferrer">About Tournesol.app</a>
+			</div>
+		</div>
+	</body>
+</html>
