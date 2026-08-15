@@ -1,5 +1,5 @@
 let showNextSuggestion = null
-function computeUserSuggestions(dataset, user, parentDiv) {
+async function computeUserSuggestions(dataset, user, parentDiv) {
 	// Load user data in 2 graphs
 	const undirGraph = new graphology.UndirectedGraph()
 	const dirGraph = new graphology.DirectedGraph()
@@ -34,17 +34,17 @@ function computeUserSuggestions(dataset, user, parentDiv) {
 	// Display all nodes as divs in parentDiv
 	parentDiv.innerHTML = ''
 	const getNextSuggestion = generateDirectedConnections(candidatesData)
-	showNextSuggestion = () => {
+	showNextSuggestion = async () => {
 		const next = getNextSuggestion()
 		if(next == null) return
 
 		const [a, b] = next
-		makeSuggestionDif(candidatesData, parentDiv, a, b)
+		await makeSuggestionDif(candidatesData, parentDiv, a, b)
 	}
 
 	// Init 10 suggestions
 	for(let i = 0; i < 10; i++) {
-		showNextSuggestion()
+		await showNextSuggestion()
 	}
 }
 
@@ -261,31 +261,33 @@ function generateDirectedConnections(data, callback, onEnd) {
 }
 
 
-function makeSuggestionDif(candidatesData, parentDiv, a, b) {
+async function makeSuggestionDif(candidatesData, parentDiv, a, b) {
 	const div = document.createElement('li')
 	div.className = 'compSuggestion'
 
 	// First node
-	const firstNode = document.createElement('span')
-	firstNode.innerHTML = `
-		<span class="nodeId">${a}</span>
-		<span class="nodeInfo">(${candidatesData[a].cmps}/${candidatesData[a].cntrs})
-		${candidatesData[a].descending.size === 0 ? '🔝' : ''}</span>
-	`
+	const firstNode = document.createElement('div')
+	firstNode.className = 'nodeInfoGroup'
+	firstNode.appendChild(await makeVideoDiv(a))
+	const firstNodeInfo = document.createElement('div')
+	firstNodeInfo.innerText = `${candidatesData[a].cmps} comparison${candidatesData[b].cmps === 1 ? '' : 's'} by me${candidatesData[a].descending.size === 0 ? ' 🔝' : ''}, ${candidatesData[a].cntrs} contributor${candidatesData[a].cntrs === 1 ? '' : 's'}`
+	firstNodeInfo.className = 'nodeInfo'
+	firstNode.appendChild(firstNodeInfo)
 	div.appendChild(firstNode)
 
 	// Append "-vs-" span
 	const vsSpan = document.createElement('span')
-	vsSpan.innerText = ' -vs- '
+	vsSpan.innerHTML = '&nbsp;vs&nbsp;'
 	div.appendChild(vsSpan)
 
 	// Second node
-	const secondNode = document.createElement('span')
-	secondNode.innerHTML = `
-		<span class="nodeId">${b}</span>
-		<span class="nodeInfo">(${candidatesData[b].cmps}/${candidatesData[b].cntrs})
-		${candidatesData[b].descending.size === 0 ? '🔝' : ''}</span>
-	`
+	const secondNode = document.createElement('div')
+	secondNode.className = 'nodeInfoGroup'
+	secondNode.appendChild(await makeVideoDiv(b))
+	const secondNodeInfo = document.createElement('div')
+	secondNodeInfo.innerText = `${candidatesData[b].cmps} comparison${candidatesData[b].cmps === 1 ? '' : 's'} by me${candidatesData[b].descending.size === 0 ? ' 🔝' : ''}, ${candidatesData[b].cntrs} contributor${candidatesData[b].cntrs === 1 ? '' : 's'}`
+	secondNodeInfo.className = 'nodeInfo'
+	secondNode.appendChild(secondNodeInfo)
 	div.appendChild(secondNode)
 
 	// Add button div
@@ -295,25 +297,57 @@ function makeSuggestionDif(candidatesData, parentDiv, a, b) {
 
 	// Add button to compare
 	const compareButton = document.createElement('button')
-	compareButton.innerText = 'Compare 🌻'
-	compareButton.onclick = () => {displayTournesolComparisonModal(a, b)}
+	compareButton.innerHTML = 'Compare&nbsp;🌻'
+	compareButton.onclick = () => {displayTournesolComparisonModal(a, b, div)}
 	buttonDiv.appendChild(compareButton)
-
-	buttonDiv.append(' ')
 
 	// Add button to the end of the div, named "Hide", on click, hide this <li>
 	const hideButton = document.createElement('button')
 	hideButton.innerText = 'Hide/Ignore'
 	hideButton.onclick = () => {
 		// Set div height to 0, then wait a second, then remove the parent
-		div.style.height = '0'
-		div.style.padding = '0'
-		div.style.marginTop = '0'
-		div.style.marginBottom = '-0.5em' // negative margin
+		div.classList.add('hidden')
 		setTimeout(() => div.remove(), 1000)
 		setTimeout(showNextSuggestion)
 	}
 	buttonDiv.appendChild(hideButton)
 
 	parentDiv.appendChild(div)
+}
+
+async function makeVideoDiv(tournesolVid) {
+	const videoId = tournesolVid.replace('yt:', '')
+	const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+	const data = await fetch(url).then(r => r.json());
+
+	//console.log(data.title);
+	//console.log(data.author_name);
+	//console.log(data.thumbnail_url);
+
+	const vdiv = document.createElement('a')
+	vdiv.className = 'nodeId'
+	vdiv.href = `https://tournesol.app/entities/yt:${videoId}`
+	vdiv.target = '_blank'
+	vdiv.rel = 'noopener noreferrer'
+
+	const vimg = document.createElement('img')
+	vimg.src = data.thumbnail_url
+	vimg.className = 'nodeImg'
+	vdiv.appendChild(vimg)
+
+	const textDiv = document.createElement('div')
+	textDiv.className = 'nodeText'
+	vdiv.appendChild(textDiv)
+
+	const vauthor = document.createElement('div')
+	vauthor.innerText = data.author_name
+	vauthor.className = 'nodeAuthor'
+	textDiv.appendChild(vauthor)
+
+	const vtitle = document.createElement('div')
+	vtitle.innerText = data.title
+	vtitle.className = 'nodeTitle'
+	textDiv.appendChild(vtitle)
+
+	return vdiv
 }

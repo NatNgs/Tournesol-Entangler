@@ -75,11 +75,11 @@ async function onApplyUsername() {
 		return
 	}
 	setStatus('working', 'Computing suggestions for ' + currentSelectedUsername.replaceAll('<', '&lt;') + '...')
-	computeUserSuggestions(dataset, currentSelectedUsername, HTML_ELMS.suggestionsContainer)
+	await computeUserSuggestions(dataset, currentSelectedUsername, HTML_ELMS.suggestionsContainer)
 	setStatus('success', 'Suggestions computed')
 }
 
-function displayTournesolComparisonModal(entityA, entityB) {
+function displayTournesolComparisonModal(entityA, entityB, elementToSetAsCompared) {
 	/*const src=`https://tournesol.app/comparison?embed=1&utm_source=NatNgsEntangler&utm_medium=frame&uidA=yt:${entityA}&uidB=yt:${entityB}`
 	HTML_ELMS.tournesolModalIFrame.src = src
 	HTML_ELMS.tournesolModal.removeAttribute('hidden')
@@ -88,6 +88,9 @@ function displayTournesolComparisonModal(entityA, entityB) {
 	// Open new tab with this url
 	const src=`https://tournesol.app/comparison?uidA=yt:${entityA}&uidB=yt:${entityB}`
 	window.open(src, '_blank')
+
+	// Add class "compared" to the comparison line
+	elementToSetAsCompared.classList.add('compared')
 }
 
 function closeTournesolModal() {

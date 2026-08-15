@@ -1,12 +1,3 @@
-
-.nodeId {
-	font-family: "Consolas", "Courier New", monospace;
-	background-color: #a808;
-	border-radius: .4em;
-	padding: .2em;
-	margin: .2em;
-}
-
 #tournesol-modal {
 	position: fixed;
 	top: 0;
@@ -33,21 +24,91 @@
 	background-color: #FFF8;
 	border-radius: .5em;
 	padding: .25em;
-	margin: .5em; /* Check suggest.js/hideButton.onclick(...) if change */
-	height: 2em;
+	margin: .5em; /* Check .hidden if change */
+	max-height: 5em;
 
 	flex-direction: row;
-	justify-content: space-between;
+	justify-content: stretch;
+
 	align-items: center;
-	transition: height 0.5s, padding 0.5s, margin 1s;
-	overflow-y: hidden;
+	transition: transform 0.5s, padding 0.5s, margin 1s, max-height 0.5s;
+	overflow: hidden;
 }
-.buttonDiv {
-	display: inline-block;
+.compSuggestion.hidden {
+	transform: scale(0);
+	max-height: 0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	margin-bottom: -.5em; /* Check .compSuggestion CSS style if change */
+}
+.compSuggestion > * {
+	flex: 0;
+}
+.compSuggestion > .nodeInfoGroup {
+	flex: 1;
+}
+.buttonDiv * {
+	margin: 0.25em;
 }
 #suggestionsContainer {
-	max-width: 750px;
+	max-width: 100em;
 }
 .nodeInfo {
 	font-size: 75%;
+	text-align: center;
+}
+.compared {
+	background-color: #CEC;
+}
+
+
+/* Video nodes */
+
+.nodeId{
+	display: flex;
+	align-items: stretch;
+	gap: 10px;
+	height: 3em;
+	overflow: hidden;
+	background-color: #a808;
+	border-radius: .4em;
+	padding: .2em;
+	margin: .2em;
+	color: black;
+	/* Remove underline */
+	text-decoration: none;
+}
+/* Add on hover effect on nodeId */
+.nodeId:hover{
+	background-color: #ea0a;
+}
+.nodeImg{
+	flex: 0;
+	border-radius: 6px;
+	height: 100%;
+	width: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+}
+.nodeText{
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
+}
+.nodeAuthor{
+	font-size: 80%;
+	font-weight: 600;
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.nodeTitle{
+	font-size: 90%;
+	line-height: 1.25;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
