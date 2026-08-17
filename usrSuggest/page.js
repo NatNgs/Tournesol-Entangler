@@ -9,6 +9,7 @@ function onPageLoad() {
 	HTML_ELMS.suggestionsContainer = document.getElementById('suggestionsContainer')
 	HTML_ELMS.tournesolModal = document.getElementById('tournesol-modal')
 	HTML_ELMS.tournesolModalIFrame = document.getElementById('tournesol-iframe')
+	HTML_ELMS.userConnectivityScore = document.getElementById('userConnectivityScore')
 }
 
 
@@ -75,7 +76,8 @@ async function onApplyUsername() {
 		return
 	}
 	setStatus('working', 'Computing suggestions for ' + currentSelectedUsername.replaceAll('<', '&lt;') + '...')
-	await computeUserSuggestions(dataset, currentSelectedUsername, HTML_ELMS.suggestionsContainer)
+	const userScore = await computeUserSuggestions(dataset, currentSelectedUsername, HTML_ELMS.suggestionsContainer)
+	HTML_ELMS.userConnectivityScore.innerText = `${userScore.all.toFixed(2)} (${(userScore.pct*100)|0}%) [min: ${userScore.min}, q1: ${userScore.q1|0}, median: ${userScore.q2|0}, q3: ${userScore.q3|0}, max: ${userScore.max}]`
 	setStatus('success', 'Suggestions computed')
 }
 

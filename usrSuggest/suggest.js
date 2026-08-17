@@ -37,7 +37,6 @@ async function computeUserSuggestions(dataset, user, parentDiv) {
 			} else if(score <= 0) {
 				directedEdges.push({ source: neg, target: pos, score: -score })
 			}
-
 		}
 		await sleep(0) // Wait a bit to prevent freezing the view
 	}
@@ -53,6 +52,7 @@ async function computeUserSuggestions(dataset, user, parentDiv) {
 
 	// Reverse ascdsc format: {node : { ascending, descending, equals, cmps, targets }}
 	const candidatesData = {}
+	const connectivity = []
 	for(const node of graphData.nodes) {
 		candidatesData[node] = {
 			id: node,
@@ -64,7 +64,25 @@ async function computeUserSuggestions(dataset, user, parentDiv) {
 			target: targetCmpNb(dataset, node),
 			lastCompared: getLastCompared(dataset, user, node),
 		}
+		connectivity.push(candidatesData[node].ascending.size + candidatesData[node].descending.size + candidatesData[node].equals.size)
 	}
+
+	// Compute user connectivity score
+	// -> Each video get a score from 0 (has no ascendant, descendant or equals) to 1 (every other video is in ascendant, descendant or equal)
+	// -> Then sum all these connectivity scores
+	connectivity.sort((a,b) => a-b)
+	const averageConn = connectivity.reduce((a,b) => a+b, 0) / connectivity.length
+	const userConnectivityScore = {
+		min: connectivity[0],
+		q1: connectivity[(connectivity.length/4)|0],
+		q2: connectivity[(connectivity.length/2)|0],
+		q3: connectivity[((connectivity.length*3)/4)|0],
+		max: connectivity[connectivity.length-1],
+		all: averageConn,
+		pct: (averageConn-1)/(graphData.nodes.length-2), // Min possible value is 1 => 0%, max is (graphData.nodes.length -1) => 100%
+	}
+	console.log(connectivity)
+	console.log(candidatesData)
 
 	// Display all nodes as divs in parentDiv
 	parentDiv.innerHTML = ''
@@ -86,10 +104,10 @@ async function computeUserSuggestions(dataset, user, parentDiv) {
 		}
 	}
 
-	// Init 10 suggestions
-	for(let i = 0; i < 10; i++) {
-		await showNextSuggestion()
-	}
+	// Init 10 suggestions, deffered
+	setTimeout(async () => {for(let i = 0; i < 10; i++) await showNextSuggestion()}, 100)
+
+	return userConnectivityScore
 }
 
 /**
@@ -114,6 +132,7 @@ async function ascendingDescendingNodes(graphData) {
 	// Loop until no new connections (or shorter paths) are found
 	while(newTotal > total) {
 		total = newTotal
+		let it = 0
 
 		// Iterate over plain edge array instead of digraph.edgeEntries()
 		for(const edge of graphData.edges) {
@@ -195,6 +214,8 @@ async function ascendingDescendingNodes(graphData) {
 					}
 				}
 			}
+
+			if((++it) % 500 === 0) await sleep(0) // Wait a bit to prevent freezing the view
 		}
 
 		// Recalculate total based on Map sizes
@@ -288,7 +309,6 @@ function generateDirectedConnections(data, callback, onEnd) {
 
 		return 0 // Any
 	})
-	console.debug(candidates.map(c => data[c]))
 
 	return () => {
 		while(candidates.length > 2) {
