@@ -1,30 +1,65 @@
 let showNextSuggestion = null
 async function computeUserSuggestions(dataset, user, parentDiv) {
-	// Load user data in 2 graphs
-	const undirGraph = new graphology.UndirectedGraph()
-	const dirGraph = new graphology.DirectedGraph()
+	// Native data structures to replace graphology
+	const nodeDegrees = {} // Tracks undirected degree (cmps)
+	const adjacencyList = {} // Tracks undirected connections for existence checks if needed
+	const directedEdges = [] // Stores { source, target, score }
 
-	// Build comparisons graphs
-	for(const date in dataset.comparisons[user]['largely_recommended']) {
-		for(const cmp of dataset.comparisons[user]['largely_recommended'][date]) {
-			undirGraph.mergeUndirectedEdge(cmp.pos, cmp.neg)
-			if(cmp.score >= 0) dirGraph.mergeDirectedEdge(cmp.pos, cmp.neg, {score: +cmp.score})
-			else if(cmp.score <= 0) dirGraph.mergeDirectedEdge(cmp.neg, cmp.pos, {score: -cmp.score})
+	// Helper to ensure node initialization
+	const initNode = (node) => {
+		if (!nodeDegrees.hasOwnProperty(node)) {
+			nodeDegrees[node] = 0
+			adjacencyList[node] = new Set()
 		}
 	}
 
-	// Ascending/descending nodes
-	const ascdsc = ascendingDescendingNodes(dirGraph)
+	// Build comparisons data
+	for(const date in dataset.comparisons[user]['largely_recommended']) {
+		for(const cmp of dataset.comparisons[user]['largely_recommended'][date]) {
+			const { pos, neg, score } = cmp
 
-	// Revese ascdsc format: {node : { ascending, descending, equals, cmps, targets }}
+			// Initialize nodes if not present
+			initNode(pos)
+			initNode(neg)
+
+			// Undirected logic (mergeUndirectedEdge equivalent)
+			// Increment degree only if this specific pair hasn't been counted for this user/session
+			// Note: Original code used mergeUndirectedEdge which handles multi-edges implicitly by degree count.
+			// Assuming dataset comparisons are unique per iteration, we increment.
+			nodeDegrees[pos]++
+			nodeDegrees[neg]++
+			adjacencyList[pos].add(neg)
+			adjacencyList[neg].add(pos)
+
+			// Directed logic (mergeDirectedEdge equivalent)
+			if(score >= 0) {
+				directedEdges.push({ source: pos, target: neg, score: +score })
+			} else if(score <= 0) {
+				directedEdges.push({ source: neg, target: pos, score: -score })
+			}
+
+		}
+		await sleep(0) // Wait a bit to prevent freezing the view
+	}
+
+	// Prepare graph object for ascendingDescendingNodes
+	const graphData = {
+		nodes: Object.keys(nodeDegrees),
+		edges: directedEdges
+	}
+
+	// Ascending/descending nodes
+	const ascdsc = await ascendingDescendingNodes(graphData)
+
+	// Reverse ascdsc format: {node : { ascending, descending, equals, cmps, targets }}
 	const candidatesData = {}
-	for(const node of undirGraph.nodes()) {
+	for(const node of graphData.nodes) {
 		candidatesData[node] = {
 			id: node,
 			ascending: ascdsc.ascending[node],
 			descending: ascdsc.descending[node],
 			equals: ascdsc.equals[node],
-			cmps: undirGraph.degree(node),
+			cmps: nodeDegrees[node], // Replaced undirGraph.degree(node)
 			cntrs: Object.values(dataset.contributors[node].largely_recommended).length,
 			target: targetCmpNb(dataset, node),
 			lastCompared: getLastCompared(dataset, user, node),
@@ -34,12 +69,21 @@ async function computeUserSuggestions(dataset, user, parentDiv) {
 	// Display all nodes as divs in parentDiv
 	parentDiv.innerHTML = ''
 	const getNextSuggestion = generateDirectedConnections(candidatesData)
-	showNextSuggestion = async () => {
+
+	// Define showNextSuggestion in a scope accessible to itself (or attach to window if legacy)
+	// Using a local function declaration is cleaner than assigning to a global variable
+	const showNextSuggestion = async () => {
+		await sleep(0) // Wait a bit to prevent freezing the view
 		const next = getNextSuggestion()
 		if(next == null) return
 
 		const [a, b] = next
-		await makeSuggestionDif(candidatesData, parentDiv, a, b)
+		try {
+			await makeSuggestionDiv(candidatesData, parentDiv, a, b)
+		} catch(e) {
+			console.error(e)
+			await showNextSuggestion() // Compute another suggestion in 100ms
+		}
 	}
 
 	// Init 10 suggestions
@@ -48,14 +92,17 @@ async function computeUserSuggestions(dataset, user, parentDiv) {
 	}
 }
 
-
-function ascendingDescendingNodes(digraph) {
+/**
+ * Computes ascending/descending/equal nodes from a plain graph data object.
+ * @param {Object} graphData - { nodes: string[], edges: [{ source, target, attributes: { score } }] }
+ */
+async function ascendingDescendingNodes(graphData) {
 	const ascending = {} // node -> Map(ascendant, distance)
 	const descending = {} // node -> Map(descendant, distance)
-	const equals = {}    // node -> Map(equal, distance)
+	const equals = {} // node -> Map(equal, distance)
 
-	// Init: Use Maps instead of Sets
-	for(const node of digraph.nodes()) {
+	// Init
+	for(const node of graphData.nodes) {
 		ascending[node] = new Map()
 		descending[node] = new Map()
 		equals[node] = new Map()
@@ -68,11 +115,15 @@ function ascendingDescendingNodes(digraph) {
 	while(newTotal > total) {
 		total = newTotal
 
-		for(const edge of digraph.edgeEntries()) {
+		// Iterate over plain edge array instead of digraph.edgeEntries()
+		for(const edge of graphData.edges) {
 			const { source, target, attributes } = edge
 			const edgeDist = 1 // Direct neighbor distance
 
-			if(attributes.score === 0) {
+			// Handle case where attributes might be missing or score undefined
+			const score = (attributes && attributes.score !== undefined) ? attributes.score : edge.score || 0;
+
+			if(score === 0) {
 				// --- EQUALS LOGIC ---
 
 				// Propagate equals from source to target
@@ -107,7 +158,6 @@ function ascendingDescendingNodes(digraph) {
 				// --- ASCENDING/DESCENDING LOGIC ---
 
 				// 1. Ascendants of source become ascendants of target
-				// (If A < Source and Source < Target, then A < Target)
 				for(const [node, dist] of ascending[source].entries()) {
 					if(!equals[target].has(node) && !descending[target].has(node)) {
 						const newDist = dist + edgeDist
@@ -119,7 +169,6 @@ function ascendingDescendingNodes(digraph) {
 				}
 
 				// 2. Descendants of target become descendants of source
-				// (If Target < B and Source < Target, then Source < B)
 				for(const [node, dist] of descending[target].entries()) {
 					if(!equals[source].has(node) && !ascending[source].has(node)) {
 						const newDist = dist + edgeDist
@@ -138,13 +187,9 @@ function ascendingDescendingNodes(digraph) {
 					}
 				}
 
-				// 4. Reverse check (Target > Source) - usually covered by loop direction,
-				// but kept for symmetry with original code's second block
+				// 4. Reverse check (Target > Source)
 				if(!equals[source].has(target) && !ascending[target].has(source)) {
 					if(!ascending[source].has(target) || ascending[source].get(target) > edgeDist) {
-						// Note: In a directed graph, this block usually implies the reverse edge exists
-						// or handles specific digraph library behaviors.
-						// Based on original code logic:
 						ascending[source].set(target, edgeDist)
 						descending[target].set(source, edgeDist)
 					}
@@ -159,6 +204,7 @@ function ascendingDescendingNodes(digraph) {
 		for(const node in equals) newTotal += equals[node].size
 
 		console.debug('ascendingDescendingNodes : ', newTotal - total, 'new connexions added/updated')
+		await sleep(0) // Wait a bit to prevent freezing the view
 	}
 
 	console.debug('ascendingDescendingNodes : ', total, 'total connexions found')
@@ -261,7 +307,7 @@ function generateDirectedConnections(data, callback, onEnd) {
 }
 
 
-async function makeSuggestionDif(candidatesData, parentDiv, a, b) {
+async function makeSuggestionDiv(candidatesData, parentDiv, a, b) {
 	const div = document.createElement('li')
 	div.className = 'compSuggestion'
 
@@ -318,7 +364,11 @@ async function makeSuggestionDif(candidatesData, parentDiv, a, b) {
 async function makeVideoDiv(tournesolVid) {
 	const videoId = tournesolVid.replace('yt:', '')
 	const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
-	const data = await fetch(url).then(r => r.json());
+	const data = await fetch(url).then(r => {
+		// If not status 2xx or 3xx, throw error
+		if(!r.ok) throw new Error(r.statusText)
+		return r.json()
+	})
 
 	//console.log(data.title);
 	//console.log(data.author_name);

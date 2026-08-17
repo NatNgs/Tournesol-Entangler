@@ -59,3 +59,8 @@ Object.defineProperty(Object.prototype, "size", {
 		return Object.keys(this).length
 	}
 });
+
+async function sleep(ms=0) {
+	console.debug('Sleeping for', ms, 'ms')
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
