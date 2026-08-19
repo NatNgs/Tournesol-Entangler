@@ -22,9 +22,9 @@
 				<h1 id="title"><a href="../index.html">Tournesol Entangler</a></h1>
 				<div class="tabs">
 					<a href="../usrBadges/badges.html">User stats</a>
-					<a href="../usrVidsGraph/graph.html">User graph</a>
-					<a class="disabled">Suggestions</a>
-					<a href="../usrsProximGraph/page.html">Community graph</a>
+					<a href="../usrVidsGraph/graph.html">Comparisons graph</a>
+					<a class="disabled">Comparison suggestions</a>
+					<a href="../usrConnectivityGraph/connectivity.html">Connectivity graph</a>
 				</div>
 			</div>
 		</div>
@@ -36,12 +36,13 @@
 			</ol>
 			<div id="loading_status" class="status">Import tournesol dataset to start</div>
 			<h1>Comparisons suggestions</h1>
-			<div>Comparisons connectivity: <span id="userConnectivityScore">-</span></div><br/>
+			<div>Current connectivity score: <span id="userConnectivityScore">-</span></div><br/>
 			<div>Comparisons computed to greatly improve your 'Largely Recommended' scores quality</div>
 			<ol id="suggestionsContainer"></ol>
-			<div>Legend: <br/>
-				- 🔝 : has never lost a comparison yet
-			</div>
+			<div>Legend: <ul style="margin: 0">
+				<li>⚠️ : poorly connected, current personal score is certainly incorrect for this video</li>
+				<li>🔝 : only have comparisons in its favor, current personal score is certainly higher than what it should be</li>
+			</ul></div>
 			<hr/>
 			<div>Suggests videos from your already public compared ones (having few comparisons, many contributors, or only winning comparisons so far). Then make pairs with no direct or transitive comparison between them.</div><br/>
 			<div>Note: there is no cache or memory on this page. Refreshing or changing user will reset hidden lines</div>
@@ -55,7 +56,7 @@
 		</div> <!-- ===================== -->
 		<div id="footer">
 			<div class="hf">
-				<span>Last update 2026-08-17</span>
+				<span>Last update 2026-08-19</span>
 				<span>
 					by NatNgs
 					<a href="https://tooting.ch/@natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/mastodon.svg"/></a>

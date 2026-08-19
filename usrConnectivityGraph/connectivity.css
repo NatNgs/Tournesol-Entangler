@@ -1,0 +1,49 @@
+/* Left Y-Axis labels (Blue) */
+.y-left-axis .tick text {
+	fill: blue;
+}
+
+/* Right Y-Axis labels (Red) */
+.y-right-axis .tick text {
+	fill: red;
+}
+.legend p {
+	margin: .25em;
+}
+.legend-blue {
+	color: blue;
+	font-weight: bold;
+}
+.legend-lblue {
+	color: #0080FF;
+	font-weight: bold;
+}
+.legend-red {
+	color: red;
+	font-weight: bold;
+}
+#connectivityGraphContainer {
+	height: 50vh;
+	background-color: white;
+	border-radius: 1em;
+}
+
+.focus-label {
+	font-size: 80%;
+	color: #000A;
+}
+.focus-label .date {
+	font-family: monospace;
+}
+.focus-label .blue {
+	fill: blue;
+	font-weight: bold;
+}
+.focus-label .lblue {
+	fill: #0080FF;
+	font-weight: bold;
+}
+.focus-label .red {
+	fill: red;
+	font-weight: bold;
+}

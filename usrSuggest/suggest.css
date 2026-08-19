@@ -48,8 +48,25 @@
 .compSuggestion > .nodeInfoGroup {
 	flex: 1;
 }
-.buttonDiv * {
-	margin: 0.25em;
+.buttonDiv {
+	display: flex;
+	flex-direction: column;
+}
+.button {
+	display: block;
+	font-size: 90%;
+	border-radius: 0.25em;
+	background-color: #E0E0E0;
+	padding: 0.25em;
+	margin: 0.2em;
+	cursor: pointer;
+	border: 1px solid #888;
+	font-family: "Gill Sans", system-ui, sans-serif;
+	text-decoration: none;
+	color: black;
+}
+.button:hover {
+	background-color: #CCC;
 }
 #suggestionsContainer {
 	max-width: 100em;
@@ -60,6 +77,23 @@
 }
 .compared {
 	background-color: #CEC;
+}
+
+.score {
+	display: inline-block;
+	font-family:'Courier New', Courier, monospace;
+	border-radius: .2em;
+	background-color: #EEE;
+	padding: .1em .2em;
+	margin: .1em;
+	font-size: 80%;
+}
+.score.main {
+	background-color: #EEE8CC;
+	font-size: 100%;
+}
+.pct {
+	font-size: 80%;
 }
 
 

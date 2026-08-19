@@ -1,6 +1,5 @@
 let showNextSuggestion = null
 async function computeUserSuggestions(dataset, user, parentDiv) {
-	// Native data structures to replace graphology
 	const nodeDegrees = {} // Tracks undirected degree (cmps)
 	const adjacencyList = {} // Tracks undirected connections for existence checks if needed
 	const directedEdges = [] // Stores { source, target, score }
@@ -81,23 +80,19 @@ async function computeUserSuggestions(dataset, user, parentDiv) {
 		all: averageConn,
 		pct: (averageConn-1)/(graphData.nodes.length-2), // Min possible value is 1 => 0%, max is (graphData.nodes.length -1) => 100%
 	}
-	console.log(connectivity)
-	console.log(candidatesData)
 
 	// Display all nodes as divs in parentDiv
 	parentDiv.innerHTML = ''
 	const getNextSuggestion = generateDirectedConnections(candidatesData)
 
-	// Define showNextSuggestion in a scope accessible to itself (or attach to window if legacy)
-	// Using a local function declaration is cleaner than assigning to a global variable
-	const showNextSuggestion = async () => {
+	showNextSuggestion = async () => {
 		await sleep(0) // Wait a bit to prevent freezing the view
 		const next = getNextSuggestion()
 		if(next == null) return
 
 		const [a, b] = next
 		try {
-			await makeSuggestionDiv(candidatesData, parentDiv, a, b)
+			makeSuggestionDiv(candidatesData, parentDiv, a, b)
 		} catch(e) {
 			console.error(e)
 			await showNextSuggestion() // Compute another suggestion in 100ms
@@ -326,20 +321,32 @@ function generateDirectedConnections(data, callback, onEnd) {
 	}
 }
 
+function getNodeInfoDiv(cId, cData, maxConnct) {
+	const div = document.createElement('div')
+	div.className = 'nodeInfoGroup'
+	div.appendChild(makeVideoDiv(cId))
+	const nodeInfo = document.createElement('div')
+	const connectivityValue = (cData.ascending.size+cData.equals.size+cData.descending.size)/maxConnct
+	const connectivityStr = connectivityValue < 0.01 ? '⚠️<1%' : `${(connectivityValue*100)|0}%`
+	nodeInfo.innerHTML = [
+		`${connectivityValue >= 0.01 && cData.descending.size === 0  ? '🔝' : ''}${connectivityStr}&nbsp;connected`,
+		`${cData.cmps}&nbsp;comparison${cData.cmps === 1 ? '' : 's'}&nbsp;by&nbsp;me`,
+		`${cData.cntrs}&nbsp;contributor${cData.cntrs === 1 ? '' : 's'}`
+	].join(' - ')
+	nodeInfo.className = 'nodeInfo'
+	div.appendChild(nodeInfo)
 
-async function makeSuggestionDiv(candidatesData, parentDiv, a, b) {
+	return div
+}
+
+function makeSuggestionDiv(candidatesData, parentDiv, a, b) {
 	const div = document.createElement('li')
 	div.className = 'compSuggestion'
 
+	const maxConnct = Object.keys(candidatesData).length - 1
+
 	// First node
-	const firstNode = document.createElement('div')
-	firstNode.className = 'nodeInfoGroup'
-	firstNode.appendChild(await makeVideoDiv(a))
-	const firstNodeInfo = document.createElement('div')
-	firstNodeInfo.innerText = `${candidatesData[a].cmps} comparison${candidatesData[b].cmps === 1 ? '' : 's'} by me${candidatesData[a].descending.size === 0 ? ' 🔝' : ''}, ${candidatesData[a].cntrs} contributor${candidatesData[a].cntrs === 1 ? '' : 's'}`
-	firstNodeInfo.className = 'nodeInfo'
-	firstNode.appendChild(firstNodeInfo)
-	div.appendChild(firstNode)
+	div.appendChild(getNodeInfoDiv(a, candidatesData[a], maxConnct))
 
 	// Append "-vs-" span
 	const vsSpan = document.createElement('span')
@@ -347,14 +354,7 @@ async function makeSuggestionDiv(candidatesData, parentDiv, a, b) {
 	div.appendChild(vsSpan)
 
 	// Second node
-	const secondNode = document.createElement('div')
-	secondNode.className = 'nodeInfoGroup'
-	secondNode.appendChild(await makeVideoDiv(b))
-	const secondNodeInfo = document.createElement('div')
-	secondNodeInfo.innerText = `${candidatesData[b].cmps} comparison${candidatesData[b].cmps === 1 ? '' : 's'} by me${candidatesData[b].descending.size === 0 ? ' 🔝' : ''}, ${candidatesData[b].cntrs} contributor${candidatesData[b].cntrs === 1 ? '' : 's'}`
-	secondNodeInfo.className = 'nodeInfo'
-	secondNode.appendChild(secondNodeInfo)
-	div.appendChild(secondNode)
+	div.appendChild(getNodeInfoDiv(b, candidatesData[b], maxConnct))
 
 	// Add button div
 	const buttonDiv = document.createElement('div')
@@ -362,14 +362,17 @@ async function makeSuggestionDiv(candidatesData, parentDiv, a, b) {
 	div.appendChild(buttonDiv)
 
 	// Add button to compare
-	const compareButton = document.createElement('button')
+	const compareButton = document.createElement('a')
 	compareButton.innerHTML = 'Compare&nbsp;🌻'
-	compareButton.onclick = () => {displayTournesolComparisonModal(a, b, div)}
+	compareButton.className = 'button'
+	compareButton.href = `https://tournesol.app/comparison?uidA=yt:${a}&uidB=yt:${b}`
+	compareButton.target = '_blank'
 	buttonDiv.appendChild(compareButton)
 
 	// Add button to the end of the div, named "Hide", on click, hide this <li>
 	const hideButton = document.createElement('button')
 	hideButton.innerText = 'Hide/Ignore'
+	hideButton.className = 'button'
 	hideButton.onclick = () => {
 		// Set div height to 0, then wait a second, then remove the parent
 		div.classList.add('hidden')
@@ -381,15 +384,7 @@ async function makeSuggestionDiv(candidatesData, parentDiv, a, b) {
 	parentDiv.appendChild(div)
 }
 
-async function makeVideoDiv(tournesolVid) {
-	const videoId = tournesolVid.replace('yt:', '')
-	const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
-	const data = await fetch(url).then(r => {
-		// If not status 2xx or 3xx, throw error
-		if(!r.ok) throw new Error(r.statusText)
-		return r.json()
-	})
-
+function makeVideoDiv(videoId) {
 	//console.log(data.title);
 	//console.log(data.author_name);
 	//console.log(data.thumbnail_url);
@@ -401,7 +396,8 @@ async function makeVideoDiv(tournesolVid) {
 	vdiv.rel = 'noopener noreferrer'
 
 	const vimg = document.createElement('img')
-	vimg.src = data.thumbnail_url
+	vimg.src = '' // TODO
+	vimg.style = 'opacity: 0;'
 	vimg.className = 'nodeImg'
 	vdiv.appendChild(vimg)
 
@@ -410,14 +406,27 @@ async function makeVideoDiv(tournesolVid) {
 	vdiv.appendChild(textDiv)
 
 	const vauthor = document.createElement('div')
-	vauthor.innerText = data.author_name
+	vauthor.innerText = 'yt:' + videoId
 	vauthor.className = 'nodeAuthor'
 	textDiv.appendChild(vauthor)
 
 	const vtitle = document.createElement('div')
-	vtitle.innerText = data.title
+	vtitle.innerText = 'Loading video information...' // TODO
 	vtitle.className = 'nodeTitle'
 	textDiv.appendChild(vtitle)
+
+	const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+	fetch(url).then(async r => {
+		if(!r.ok) {
+			vtitle.innerText = '(Unavailable, unlisted or removed)'
+		} else {
+			const data = await r.json()
+			vimg.src = data.thumbnail_url
+			vimg.style = ''
+			vauthor.innerText = data.author_name
+			vtitle.innerText = data.title
+		}
+	})
 
 	return vdiv
 }

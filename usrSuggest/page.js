@@ -77,22 +77,14 @@ async function onApplyUsername() {
 	}
 	setStatus('working', 'Computing suggestions for ' + currentSelectedUsername.replaceAll('<', '&lt;') + '...')
 	const userScore = await computeUserSuggestions(dataset, currentSelectedUsername, HTML_ELMS.suggestionsContainer)
-	HTML_ELMS.userConnectivityScore.innerText = `${userScore.all.toFixed(2)} (${(userScore.pct*100)|0}%) [min: ${userScore.min}, q1: ${userScore.q1|0}, median: ${userScore.q2|0}, q3: ${userScore.q3|0}, max: ${userScore.max}]`
+	HTML_ELMS.userConnectivityScore.innerHTML = `
+		<span class="score main">${userScore.all.toFixed(2)}</span> <span class="pct">(${(userScore.pct*100)|0}% connected)</span>
+		[min: <span class="score">${userScore.min}</span>,
+		q1: <span class="score">${userScore.q1|0}</span>,
+		median: <span class="score">${userScore.q2|0}</span>,
+		q3: <span class="score">${userScore.q3|0}</span>,
+		max: <span class="score">${userScore.max}</span>]`
 	setStatus('success', 'Suggestions computed')
-}
-
-function displayTournesolComparisonModal(entityA, entityB, elementToSetAsCompared) {
-	/*const src=`https://tournesol.app/comparison?embed=1&utm_source=NatNgsEntangler&utm_medium=frame&uidA=yt:${entityA}&uidB=yt:${entityB}`
-	HTML_ELMS.tournesolModalIFrame.src = src
-	HTML_ELMS.tournesolModal.removeAttribute('hidden')
-	*/
-
-	// Open new tab with this url
-	const src=`https://tournesol.app/comparison?uidA=yt:${entityA}&uidB=yt:${entityB}`
-	window.open(src, '_blank')
-
-	// Add class "compared" to the comparison line
-	elementToSetAsCompared.classList.add('compared')
 }
 
 function closeTournesolModal() {

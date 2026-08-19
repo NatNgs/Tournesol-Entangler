@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Tournesol Entangler</title>
+
+		<!-- External -->
+		<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+		<!-- Tournesol Entangler -->
+		<script src="../main/common.js"></script>
+		<script src="../main/DatasetManager.js"></script>
+		<link rel="stylesheet" href="../main/common.css">
+
+		<!-- This page -->
+		<script src="connectivity.js"></script>
+		<script src="page.js"></script>
+		<link rel="stylesheet" href="connectivity.css">
+	</head>
+	<body onload="onPageLoad()">
+		<div id="header">
+			<div class="hf">
+				<h1 id="title"><a href="../index.html">Tournesol Entangler</a></h1>
+				<div class="tabs">
+					<a href="../usrBadges/badges.html">User stats</a>
+					<a href="../usrVidsGraph/graph.html">Comparisons graph</a>
+					<a href="../usrSuggest/suggest.html">Comparison suggestions</a>
+					<a class="disabled">Connectivity graph</a>
+				</div>
+			</div>
+		</div>
+		<div id="content"> <!-- ========= -->
+			<ol class="actions">
+				<li>Download tournesol public dataset: <a href="https://tournesol.app/" target="_blank" rel="noopener noreferrer">tournesol.app</a> (see footer)</li>
+				<li>Import dataset zip file: <input type="file" id="datasetzip" accept=".zip" name="tournesolDataset" onchange="onSetDatasetZip()"/></li>
+				<li>Select a user: <input type="text" id="username" placeholder="username"/><button id="userapply" onclick="onApplyUsername()">Apply / Refresh</button></li>
+			</ol>
+			<div id="loading_status" class="status">Import tournesol dataset to start</div>
+			<h1>Connectivity graph</h1>
+			<div id="connectivityGraphContainer"></div>
+
+			<div class="legend">Legend: <ul style="margin: 0">
+				<li><span class="legend-lblue">━ ━</span> <b>Maximum possible connectivity</b> (Left y-axis) : Equal to the number of videos compared minus 1</li>
+					<li><span class="legend-blue">━━</span> <b>Average connectivity</b> (Left y-axis): Average value of "To how many other videos, one video is directly or indirectly compared to"</li>
+					<li><span class="legend-red">━━</span> <b>Percentage</b> (Right y-axis) : Average connectivity divided by maximum possible connectivity, expressed as a percentage (0% means minimum connectivity, 100% means full connectivity)</li>
+				</ul>
+			</div>
+			<p>
+				Comparing new videos increase the maximum connectivity and reduce the average connectivity (the new video is compared to few yet, so its low value will make the average go down by a bit).<br/>
+				Adding comparisons to existing video may increase the connectivity (depending on the comparison, by a lot or by a little).<br/>
+				Comparisons made between entities already transitively compared does not increase the connectivity (if A is better than B, and B is better than C; connectivity will not increase by comparing A better than C).
+			</p>
+			<p>
+				A low connectivity means that Tournesol is lacking comparisons to score well your viewed videos. Videos with low connectivity may have unstable score (going up and down by a lot every week) or wrongly representing your true interests.<br/>
+				High connectivity means your Tournesol personal scores have a high quality, videos scores are well representative of your ideas, and score are much more stable.
+			</p>
+			<p>Check <a href="../usrSuggest/suggest.html" target="_blank">Comparison suggestions</a> tool to get comparisons suggestions to improve your connectivity greatly</p>
+		</div> <!-- ===================== -->
+		<div id="footer">
+			<div class="hf">
+				<span>Last update 2026-08-19</span>
+				<span>
+					by NatNgs
+					<a href="https://tooting.ch/@natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/mastodon.svg"/></a>
+					<a href="https://github.com/natngs" target="_blank" rel="noopener noreferrer"><img src="../resources/img/github.svg"/></a>
+					<a href="https://tournesol.app/users/NatNgs/recommendations" target="_blank" rel="noopener noreferrer">🌻</a>
+				</span>
+				<a href="https://tournesol.app/about" target="_blank" rel="noopener noreferrer">About Tournesol.app</a>
+			</div>
+		</div>
+	</body>
+</html>
